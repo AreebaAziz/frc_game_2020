@@ -1,10 +1,8 @@
-# Space Invaders
-
-[![Language](https://img.shields.io/badge/language-python-blue.svg?style=flat)](https://www.python.org)
-[![Module](https://img.shields.io/badge/module-pygame-brightgreen.svg?style=flat)](http://www.pygame.org/news.html)
-[![Release](https://img.shields.io/badge/release-v1.0-orange.svg?style=flat)](http://www.leejamesrobinson.com/space-invaders.html)
+# McMaster Engineering Space Invaders for FRC 2020
 
 ## About
+
+This is a fork of the Python Space Invaders repo created for the FIRST Robotics Competition McMaster University 2020 event. 
 
 Space Invaders is a two-dimensional fixed shooter game in which the player controls a ship with lasers by moving it horizontally
 across the bottom of the screen and firing at descending aliens. The aim is to defeat five rows of ten aliens that move
@@ -34,20 +32,12 @@ python spaceinvaders.py
 
 **Note:** If you're using Python 3, replace the command "python" with "python3"
 
-**MacOS Mojave**: You need to use Python 3.7.2 or greater: [Source](https://github.com/pygame/pygame/issues/555)
-
-## Demo
-
-[![Space Invaders](http://img.youtube.com/vi/_2yUP3WMDRc/0.jpg)](http://www.youtube.com/watch?v=_2yUP3WMDRc)
-
-## Notable Forks
-
-- [AI research project where four types of agents control the ship and play the game](https://github.com/scott-pickthorn/Space_Invaders)
-- [NEAT program that evolves to beat the game](https://github.com/lairsonm/neat-in-space-invaders)
-
 ## Contact
 
-Thanks for checking out my game and I hope you enjoy it! Feel free to contact me.
-
+The author of the original repo:
 - Lee Robinson
 - lrobinson2011@gmail.com
+
+Created for McMaster Engineering by:
+- Areeba Aziz (aziza11@mcmaster.ca)
+- Maanav Dalal (maanavdalal@gmail.com)
