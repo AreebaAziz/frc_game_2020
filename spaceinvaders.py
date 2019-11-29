@@ -7,6 +7,7 @@ from pygame import *
 import sys
 from os.path import abspath, dirname
 from random import choice
+from maceng import receiver as maceng_receiver
 
 BASE_PATH = abspath(dirname(__file__))
 FONT_PATH = BASE_PATH + '/fonts/'
@@ -358,6 +359,9 @@ class SpaceInvaders(object):
         self.life3 = Life(769, 3)
         self.livesGroup = sprite.Group(self.life1, self.life2, self.life3)
 
+        # signals to send to maceng_receiver
+        self.gameover_signal = False 
+
     def reset(self, score):
         self.player = Ship()
         self.playerGroup = sprite.Group(self.player)
@@ -593,6 +597,9 @@ class SpaceInvaders(object):
                         self.startGame = True
                         self.mainScreen = False
 
+                # reset signals for maceng_receiver
+                self.gameover_signal = False 
+
             elif self.startGame:
                 if not self.enemies and not self.explosionsGroup:
                     currentTime = time.get_ticks()
@@ -634,6 +641,10 @@ class SpaceInvaders(object):
                 # Reset enemy starting position
                 self.enemyPosition = ENEMY_DEFAULT_POSITION
                 self.create_game_over(currentTime)
+
+                if not self.gameover_signal:
+                    maceng_receiver.gameover(score=self.score)
+                    self.gameover_signal = True
 
             display.update()
             self.clock.tick(60)
