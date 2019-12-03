@@ -359,8 +359,9 @@ class SpaceInvaders(object):
         self.life3 = Life(769, 3)
         self.livesGroup = sprite.Group(self.life1, self.life2, self.life3)
 
-        # signals to send to maceng_receiver
+        ###########MAC ENG ADDITIONS ###########
         self.gameover_signal = False 
+        
 
     def reset(self, score):
         self.player = Ship()
