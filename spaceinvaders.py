@@ -3,6 +3,7 @@
 # Space Invaders
 # Created by Lee Robinson
 
+import logging
 from pygame import *
 import sys
 from os.path import abspath, dirname
@@ -339,8 +340,25 @@ class TextVariableMsg(object):
 
     def create(self, message):
         return Text(self.font, self.size, message, self.color, self.xpos, self.ypos)
-#---------- MAC ENG ADDITIONS END -------------#
 
+class TextVariableColor(object):
+    def __init__(self, textFont, size, message, xpos, ypos):
+        self.font = textFont
+        self.size = size
+        self.message = message 
+        self.xpos = xpos
+        self.ypos = ypos 
+
+    def create(self, color):
+        return Text(self.font, self.size, self.message, color, self.xpos, self.ypos)   
+
+LEADERBOARD = 0
+MAIN_MENU = 1
+ENTER_NAME = 2
+PREV = 3
+NEXT = 4
+NUM_BOARD_PAGES = 4
+#---------- MAC ENG ADDITIONS END -------------#
 
 class SpaceInvaders(object):
     def __init__(self):
@@ -381,22 +399,28 @@ class SpaceInvaders(object):
 
         # leaderboard
         self.leaderboardScreen = False
-        self.leaderboard_texts = [
-                Text(FONT, 50, "LEADERBOARD", GREEN, 170, 7),
-                Text(FONT, 25, 'Main Menu', YELLOW, 30, 560),
-                Text(FONT, 25, 'Enter Name', WHITE, 240, 560),
-                Text(FONT, 25, 'PREV', GRAY, 500, 560),
-                Text(FONT, 25, 'NEXT', WHITE, 590, 560)
-            ]
+        self.leaderboard_texts = {
+                LEADERBOARD: Text(FONT, 50, "LEADERBOARD", GREEN, 170, 7),
+                MAIN_MENU: TextVariableColor(FONT, 25, 'Main Menu', 30, 560),
+                ENTER_NAME: TextVariableColor(FONT, 25, 'Enter Name', 240, 560),
+                PREV: TextVariableColor(FONT, 25, 'PREV', 500, 560),
+                NEXT: TextVariableColor(FONT, 25, 'NEXT', 590, 560),
+            }
+        self.greyed = [PREV]
+        self.active = MAIN_MENU
 
-    def create_leaderboard(self):
+    def create_leaderboard(self, active, greyed=[]):
         self.screen.blit(self.background, (0, 0))
-        for text in self.leaderboard_texts:
-            text.draw(self.screen)
+        self.leaderboard_texts[LEADERBOARD].draw(self.screen)
 
-        for e in event.get():
-            if self.should_exit(e):
-                sys.exit()
+        for t in {MAIN_MENU, ENTER_NAME, PREV, NEXT}:
+            if (t == active):
+                self.leaderboard_texts[t].create(YELLOW).draw(self.screen)
+            elif (t in greyed):
+                self.leaderboard_texts[t].create(GRAY).draw(self.screen)
+            else:
+                self.leaderboard_texts[t].create(WHITE).draw(self.screen)
+
         #---------- MAC ENG ADDITIONS END -------------#
 
     def reset(self, score):
@@ -638,11 +662,7 @@ class SpaceInvaders(object):
                                                         self.make_blockers(3))
                         self.livesGroup.add(self.life1, self.life2, self.life3)
                         self.reset(0)
-                        #### START TEMP 
-                        # self.startGame = True 
-                        self.startGame = False
-                        self.leaderboardScreen = True 
-                        ### END TEMP
+                        self.startGame = True 
 
                         self.mainScreen = False
 
@@ -690,6 +710,7 @@ class SpaceInvaders(object):
                 # Reset enemy starting position
                 self.enemyPosition = ENEMY_DEFAULT_POSITION
                 self.create_game_over(currentTime, score=self.score)
+                import pdb; pdb.set_trace()
 
             #---------- MAC ENG ADDITIONS START -----------#
                 if not self.gameover_signal:
@@ -697,7 +718,41 @@ class SpaceInvaders(object):
                     self.gameover_signal = True
 
             elif self.leaderboardScreen:
-                self.create_leaderboard()
+                self.create_leaderboard(active=self.active, greyed=self.greyed)
+                for e in event.get():
+                    if self.should_exit(e):
+                        sys.exit()
+                    if e.type == KEYDOWN:
+                        if e.key == K_RIGHT:
+                            logging.debug("right key pressed")
+                            self.active += 1
+                            while (self.active in self.greyed or self.active > NEXT):
+                                if (self.active < NEXT):
+                                    self.active += 1
+                                elif (self.active == NEXT and self.active in self.greyed):
+                                    self.active -= 1
+                                    break 
+                                else:
+                                    self.active = NEXT 
+                                    break 
+                        elif e.key == K_LEFT:
+                            logging.debug("left key pressed")
+                            self.active -= 1
+                            while (self.active in self.greyed or self.active < MAIN_MENU):
+                                if (self.active > MAIN_MENU):
+                                    self.active -= 1
+                                elif (self.active == MAIN_MENU and self.active in self.greyed):
+                                    self.active -= 1
+                                    break 
+                                else:
+                                    self.active = MAIN_MENU 
+                                    break 
+                        elif e.key == K_RETURN:
+                            logging.debug("return key pressed on menu item {}".format(self.active))
+                            if (self.active == MAIN_MENU):
+                                self.mainScreen = True 
+                                self.leaderboardScreen = False 
+
 
             #---------- MAC ENG ADDITIONS START -----------#
             display.update()
