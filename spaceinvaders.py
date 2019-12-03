@@ -16,6 +16,7 @@ SOUND_PATH = BASE_PATH + '/sounds/'
 
 # Colors (R, G, B)
 WHITE = (255, 255, 255)
+GRAY = (192, 192, 192)
 GREEN = (78, 255, 87)
 YELLOW = (241, 255, 0)
 BLUE = (80, 255, 239)
@@ -374,8 +375,28 @@ class SpaceInvaders(object):
         self.livesGroup = sprite.Group(self.life1, self.life2, self.life3)
 
         #---------- MAC ENG ADDITIONS START -----------#
+        # gameover
         self.gameover_signal = False 
-        self.gameOverText_scoreV = TextVariableMsg(FONT, 30, BLUE, 325, 330)
+        self.gameOverText_scoreV = TextVariableMsg(FONT, 30, BLUE, 400, 330)
+
+        # leaderboard
+        self.leaderboardScreen = False
+        self.leaderboard_texts = [
+                Text(FONT, 50, "LEADERBOARD", GREEN, 170, 7),
+                Text(FONT, 25, 'Main Menu', YELLOW, 30, 560),
+                Text(FONT, 25, 'Enter Name', WHITE, 240, 560),
+                Text(FONT, 25, 'PREV', GRAY, 500, 560),
+                Text(FONT, 25, 'NEXT', WHITE, 590, 560)
+            ]
+
+    def create_leaderboard(self):
+        self.screen.blit(self.background, (0, 0))
+        for text in self.leaderboard_texts:
+            text.draw(self.screen)
+
+        for e in event.get():
+            if self.should_exit(e):
+                sys.exit()
         #---------- MAC ENG ADDITIONS END -------------#
 
     def reset(self, score):
@@ -589,7 +610,7 @@ class SpaceInvaders(object):
             self.gameOverText.draw(self.screen)
             self.gameOverText_score.draw(self.screen)            
         elif passed > 3800:
-            self.mainScreen = True
+            self.leaderboardScreen = True
 
         for e in event.get():
             if self.should_exit(e):
@@ -617,7 +638,12 @@ class SpaceInvaders(object):
                                                         self.make_blockers(3))
                         self.livesGroup.add(self.life1, self.life2, self.life3)
                         self.reset(0)
-                        self.startGame = True
+                        #### START TEMP 
+                        # self.startGame = True 
+                        self.startGame = False
+                        self.leaderboardScreen = True 
+                        ### END TEMP
+
                         self.mainScreen = False
 
                 # reset signals for maceng_receiver
@@ -665,10 +691,15 @@ class SpaceInvaders(object):
                 self.enemyPosition = ENEMY_DEFAULT_POSITION
                 self.create_game_over(currentTime, score=self.score)
 
+            #---------- MAC ENG ADDITIONS START -----------#
                 if not self.gameover_signal:
                     maceng_receiver.gameover(score=self.score)
                     self.gameover_signal = True
 
+            elif self.leaderboardScreen:
+                self.create_leaderboard()
+
+            #---------- MAC ENG ADDITIONS START -----------#
             display.update()
             self.clock.tick(60)
 
