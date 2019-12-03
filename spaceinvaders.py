@@ -327,6 +327,20 @@ class Text(object):
         surface.blit(self.surface, self.rect)
 
 
+#---------- MAC ENG ADDITIONS START -----------#
+class TextVariableMsg(object):
+    def __init__(self, textFont, size, color, xpos, ypos):
+        self.font = textFont
+        self.size = size
+        self.color = color 
+        self.xpos = xpos
+        self.ypos = ypos 
+
+    def create(self, message):
+        return Text(self.font, self.size, message, self.color, self.xpos, self.ypos)
+#---------- MAC ENG ADDITIONS END -------------#
+
+
 class SpaceInvaders(object):
     def __init__(self):
         # It seems, in Linux buffersize=512 is not enough, use 4096 to prevent:
@@ -359,9 +373,10 @@ class SpaceInvaders(object):
         self.life3 = Life(769, 3)
         self.livesGroup = sprite.Group(self.life1, self.life2, self.life3)
 
-        ###########MAC ENG ADDITIONS ###########
+        #---------- MAC ENG ADDITIONS START -----------#
         self.gameover_signal = False 
-        
+        self.gameOverText_scoreV = TextVariableMsg(FONT, 30, BLUE, 325, 330)
+        #---------- MAC ENG ADDITIONS END -------------#
 
     def reset(self, score):
         self.player = Ship()
@@ -555,18 +570,25 @@ class SpaceInvaders(object):
             self.makeNewShip = False
             self.shipAlive = True
 
-    def create_game_over(self, currentTime):
+    def create_game_over(self, currentTime, score):
         self.screen.blit(self.background, (0, 0))
+        self.gameOverText_score = self.gameOverText_scoreV.create("Score: {}".format(score))
+
         passed = currentTime - self.timer
         if passed < 750:
             self.gameOverText.draw(self.screen)
+            self.gameOverText_score.draw(self.screen)
         elif 750 < passed < 1500:
             self.screen.blit(self.background, (0, 0))
         elif 1500 < passed < 2250:
             self.gameOverText.draw(self.screen)
-        elif 2250 < passed < 2750:
+            self.gameOverText_score.draw(self.screen)
+        elif 2250 < passed < 3000:
             self.screen.blit(self.background, (0, 0))
-        elif passed > 3000:
+        elif 3000 < passed < 3800:
+            self.gameOverText.draw(self.screen)
+            self.gameOverText_score.draw(self.screen)            
+        elif passed > 3800:
             self.mainScreen = True
 
         for e in event.get():
@@ -641,7 +663,7 @@ class SpaceInvaders(object):
                 currentTime = time.get_ticks()
                 # Reset enemy starting position
                 self.enemyPosition = ENEMY_DEFAULT_POSITION
-                self.create_game_over(currentTime)
+                self.create_game_over(currentTime, score=self.score)
 
                 if not self.gameover_signal:
                     maceng_receiver.gameover(score=self.score)
