@@ -17,7 +17,7 @@ SOUND_PATH = BASE_PATH + '/sounds/'
 
 # Colors (R, G, B)
 WHITE = (255, 255, 255)
-GRAY = (192, 192, 192)
+GRAY = (102, 102, 102)
 GREEN = (78, 255, 87)
 YELLOW = (241, 255, 0)
 BLUE = (80, 255, 239)
@@ -395,7 +395,7 @@ class SpaceInvaders(object):
         #---------- MAC ENG ADDITIONS START -----------#
         # gameover
         self.gameover_signal = False 
-        self.gameOverText_scoreV = TextVariableMsg(FONT, 30, BLUE, 400, 330)
+        self.gameOverText_scoreV = TextVariableMsg(FONT, 30, BLUE, 320, 330)
 
         # leaderboard
         self.leaderboardScreen = False
@@ -635,6 +635,7 @@ class SpaceInvaders(object):
             self.gameOverText_score.draw(self.screen)            
         elif passed > 3800:
             self.leaderboardScreen = True
+            self.gameOver = False 
 
         for e in event.get():
             if self.should_exit(e):
@@ -654,7 +655,7 @@ class SpaceInvaders(object):
                 for e in event.get():
                     if self.should_exit(e):
                         sys.exit()
-                    if e.type == KEYUP:
+                    if e.type == KEYDOWN:
                         # Only create blockers on a new game, not a new round
                         self.allBlockers = sprite.Group(self.make_blockers(0),
                                                         self.make_blockers(1),
@@ -662,7 +663,18 @@ class SpaceInvaders(object):
                                                         self.make_blockers(3))
                         self.livesGroup.add(self.life1, self.life2, self.life3)
                         self.reset(0)
+
+                        ## UNCOMMENT FOR ACTUAL GAME ##
+
                         self.startGame = True 
+                        self.leaderboardScreen = False
+
+                        ## UNCOMMENT TO SKIP GAMEPLAY ##
+
+                        # self.startGame = False 
+                        # self.leaderboardScreen = True
+
+                        ## END ##
 
                         self.mainScreen = False
 
@@ -710,7 +722,6 @@ class SpaceInvaders(object):
                 # Reset enemy starting position
                 self.enemyPosition = ENEMY_DEFAULT_POSITION
                 self.create_game_over(currentTime, score=self.score)
-                import pdb; pdb.set_trace()
 
             #---------- MAC ENG ADDITIONS START -----------#
                 if not self.gameover_signal:
@@ -754,7 +765,7 @@ class SpaceInvaders(object):
                                 self.leaderboardScreen = False 
 
 
-            #---------- MAC ENG ADDITIONS START -----------#
+            #---------- MAC ENG ADDITIONS END -----------#
             display.update()
             self.clock.tick(60)
 
