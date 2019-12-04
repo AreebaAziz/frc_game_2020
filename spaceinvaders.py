@@ -9,23 +9,10 @@ import sys
 from os.path import abspath, dirname
 from random import choice
 from maceng import receiver as maceng_receiver
-
-BASE_PATH = abspath(dirname(__file__))
-FONT_PATH = BASE_PATH + '/fonts/'
-IMAGE_PATH = BASE_PATH + '/images/'
-SOUND_PATH = BASE_PATH + '/sounds/'
-
-# Colors (R, G, B)
-WHITE = (255, 255, 255)
-GRAY = (102, 102, 102)
-GREEN = (78, 255, 87)
-YELLOW = (241, 255, 0)
-BLUE = (80, 255, 239)
-PURPLE = (203, 0, 255)
-RED = (237, 28, 36)
+from maceng.leaderboard import Leaderboard
+from maceng.constants import *
 
 SCREEN = display.set_mode((800, 600))
-FONT = FONT_PATH + 'space_invaders.ttf'
 IMG_NAMES = ['ship', 'mystery',
              'enemy1_1', 'enemy1_2',
              'enemy2_1', 'enemy2_2',
@@ -352,12 +339,6 @@ class TextVariableColor(object):
     def create(self, color):
         return Text(self.font, self.size, self.message, color, self.xpos, self.ypos)   
 
-LEADERBOARD = 0
-MAIN_MENU = 1
-ENTER_NAME = 2
-PREV = 3
-NEXT = 4
-NUM_BOARD_PAGES = 4
 #---------- MAC ENG ADDITIONS END -------------#
 
 class SpaceInvaders(object):
@@ -399,27 +380,7 @@ class SpaceInvaders(object):
 
         # leaderboard
         self.leaderboardScreen = False
-        self.leaderboard_texts = {
-                LEADERBOARD: Text(FONT, 50, "LEADERBOARD", GREEN, 170, 7),
-                MAIN_MENU: TextVariableColor(FONT, 25, 'Main Menu', 30, 560),
-                ENTER_NAME: TextVariableColor(FONT, 25, 'Enter Name', 240, 560),
-                PREV: TextVariableColor(FONT, 25, 'PREV', 500, 560),
-                NEXT: TextVariableColor(FONT, 25, 'NEXT', 590, 560),
-            }
-        self.greyed = [PREV]
-        self.active = MAIN_MENU
-
-    def create_leaderboard(self, active, greyed=[]):
-        self.screen.blit(self.background, (0, 0))
-        self.leaderboard_texts[LEADERBOARD].draw(self.screen)
-
-        for t in {MAIN_MENU, ENTER_NAME, PREV, NEXT}:
-            if (t == active):
-                self.leaderboard_texts[t].create(YELLOW).draw(self.screen)
-            elif (t in greyed):
-                self.leaderboard_texts[t].create(GRAY).draw(self.screen)
-            else:
-                self.leaderboard_texts[t].create(WHITE).draw(self.screen)
+        self.leaderboard = Leaderboard(self.screen, self.background)
 
         #---------- MAC ENG ADDITIONS END -------------#
 
@@ -634,8 +595,10 @@ class SpaceInvaders(object):
             self.gameOverText.draw(self.screen)
             self.gameOverText_score.draw(self.screen)            
         elif passed > 3800:
+            #---------- MAC ENG ADDITIONS START -----------#
             self.leaderboardScreen = True
             self.gameOver = False 
+            #---------- MAC ENG ADDITIONS END -----------#
 
         for e in event.get():
             if self.should_exit(e):
@@ -666,13 +629,13 @@ class SpaceInvaders(object):
 
                         ## UNCOMMENT FOR ACTUAL GAME ##
 
-                        self.startGame = True 
-                        self.leaderboardScreen = False
+                        # self.startGame = True 
+                        # self.leaderboardScreen = False
 
                         ## UNCOMMENT TO SKIP GAMEPLAY ##
 
-                        # self.startGame = False 
-                        # self.leaderboardScreen = True
+                        self.startGame = False 
+                        self.leaderboardScreen = True
 
                         ## END ##
 
@@ -729,41 +692,15 @@ class SpaceInvaders(object):
                     self.gameover_signal = True
 
             elif self.leaderboardScreen:
-                self.create_leaderboard(active=self.active, greyed=self.greyed)
+                self.leaderboard.create()
                 for e in event.get():
                     if self.should_exit(e):
                         sys.exit()
                     if e.type == KEYDOWN:
-                        if e.key == K_RIGHT:
-                            logging.debug("right key pressed")
-                            self.active += 1
-                            while (self.active in self.greyed or self.active > NEXT):
-                                if (self.active < NEXT):
-                                    self.active += 1
-                                elif (self.active == NEXT and self.active in self.greyed):
-                                    self.active -= 1
-                                    break 
-                                else:
-                                    self.active = NEXT 
-                                    break 
-                        elif e.key == K_LEFT:
-                            logging.debug("left key pressed")
-                            self.active -= 1
-                            while (self.active in self.greyed or self.active < MAIN_MENU):
-                                if (self.active > MAIN_MENU):
-                                    self.active -= 1
-                                elif (self.active == MAIN_MENU and self.active in self.greyed):
-                                    self.active -= 1
-                                    break 
-                                else:
-                                    self.active = MAIN_MENU 
-                                    break 
-                        elif e.key == K_RETURN:
-                            logging.debug("return key pressed on menu item {}".format(self.active))
-                            if (self.active == MAIN_MENU):
-                                self.mainScreen = True 
-                                self.leaderboardScreen = False 
-
+                        change_to_mainscreen = self.leaderboard.update(e.key)
+                        if change_to_mainscreen:
+                            self.mainScreen = True 
+                            self.leaderboardScreen = False 
 
             #---------- MAC ENG ADDITIONS END -----------#
             display.update()
