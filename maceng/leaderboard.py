@@ -3,8 +3,6 @@ from pygame import K_RIGHT, K_LEFT, K_RETURN
 from .constants import * 
 
 # constants
-TITLE_SIZE = 50
-TITLE_COLOR = GREEN
 BTN_LABEL_SIZE = 25
 BTN_COLOR_IDLE = WHITE
 BTN_COLOR_ACTIVE = YELLOW
@@ -44,12 +42,27 @@ class Page(object):
 		from spaceinvaders import Text 
 		self.title_text = Text(
 			textFont=FONT, 
-			size=TITLE_SIZE, 
-			color=TITLE_COLOR,
+			size=50, 
+			color=GREEN,
 			message=self.title, 
 			xpos=170, 
 			ypos=7
 		)
+		if self.subtitle:
+			self.subtitle_text = Text(
+				textFont=FONT, 
+				size=23, 
+				color=WHITE,
+				message=self.subtitle, 
+				xpos=280, 
+				ypos=60
+			)
+
+	def create_title_texts(self, screen):
+		self.title_text.draw(screen)
+		if self.subtitle:
+			self.subtitle_text.draw(screen)
+
 
 class Leaderboard(object):
 
@@ -67,7 +80,7 @@ class Leaderboard(object):
 		self.screen.blit(self.background, (0, 0))
 
 		# draw title text
-		self.active_page.title_text.draw(self.screen)
+		self.active_page.create_title_texts(self.screen)
 
 		# draw menu buttons
 		for b in BUTTONS:
