@@ -7,6 +7,9 @@ BTN_LABEL_SIZE = 25
 BTN_COLOR_IDLE = WHITE
 BTN_COLOR_ACTIVE = YELLOW
 BTN_COLOR_DISABLED = GRAY
+TABLE_TXT_SIZE = 20
+TABLE_HDR_COLOR = PURPLE
+TABLE_TXT_COLOR = BLUE
 
 # NOTE - Button active and Page active are NOT the same thing!! #
 
@@ -36,6 +39,7 @@ class Page(object):
 		self.title = title
 		self.subtitle = subtitle
 		self.active = active
+		self.table = None
 
 	def initialize(self):
 		# need to do the import here to avoid cyclic import issue
@@ -61,8 +65,51 @@ class Page(object):
 	def create_title_texts(self, screen):
 		self.title_text.draw(screen)
 		if self.subtitle:
-			self.subtitle_text.draw(screen)
+			self.subtitle_text.draw(screen)	
 
+	def create_table(self, screen, data):
+		from spaceinvaders import Text 
+		# creates a table given data.
+		# the data should be a list of rows for the table.
+		num_cols = len(data[0])
+		num_rows = len(data)
+		xstart = 50
+		xend = 800
+		ystart = 100
+		yend = 660
+
+		xinc = (xend - xstart) / num_cols
+		yinc = 24
+
+		# store all texts into a big array
+		self.table = []
+
+		# top row
+		for col in range(num_cols):
+			xpos = xstart + col * xinc
+			ypos = ystart
+			self.table.append(Text(
+				textFont=FONT, 
+				size=TABLE_TXT_SIZE, 
+				color=TABLE_HDR_COLOR,
+				message=data[0][col], 
+				xpos=xpos, 
+				ypos=ypos
+			))
+
+		# all other rows
+		for row in range(1, num_rows):
+			for col in range(num_cols):
+				xpos = xstart + col * xinc
+				ypos = ystart + row * yinc
+				self.table.append(Text(
+					textFont=FONT, 
+					size=TABLE_TXT_SIZE, 
+					color=TABLE_TXT_COLOR,
+					message=data[row][col], 
+					xpos=xpos, 
+					ypos=ypos
+				))	
 
 class Leaderboard(object):
 
@@ -75,6 +122,18 @@ class Leaderboard(object):
 			p.initialize()
 		for b in BUTTONS:
 			b.initialize()
+
+		ALLTIME_PG.create_table(self.screen, [
+			["Rank", "Uname", "Affil.", "Score"],
+			["01", "Areeba", "4914", "9000"],
+			["02", "Maanav", "2291", "110"],
+		])
+
+		TODAY_PG.create_table(self.screen, [
+			["Rank", "Uname", "Affil.", "Score"],
+			["01", "Maanav", "2291", "110"],
+		])
+
 
 	def create(self):
 		self.screen.blit(self.background, (0, 0))
@@ -90,6 +149,12 @@ class Leaderboard(object):
 				b.text.create(BTN_COLOR_DISABLED).draw(self.screen)
 			else:
 				b.text.create(BTN_COLOR_IDLE).draw(self.screen)
+
+		# draw table if applicable 
+		if self.active_page.table is not None:
+			for t in self.active_page.table:
+				t.draw(self.screen)
+
 
 	def _inc_active_btn(self):
 		original_index = BUTTONS.index(self.active_btn)
@@ -174,3 +239,6 @@ PAGES = [
 	Page("Leaderboard", subtitle="Today"),
 	Page("Credits"),
 ]
+
+ALLTIME_PG = PAGES[0]
+TODAY_PG = PAGES[1]
