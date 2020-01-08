@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.db import models
 
 class User(models.Model):
@@ -20,3 +21,8 @@ class Score(models.Model):
 	@classmethod
 	def get_alltime_scores(cls):
 		return list(cls.objects.order_by('-score'))
+
+	@classmethod
+	def get_today_scores(cls):
+		return list(cls.objects.filter(datetime__gte=timezone.now().replace(hour=0, minute=0, second=0)).order_by('-score'))
+

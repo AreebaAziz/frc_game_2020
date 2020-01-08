@@ -630,13 +630,13 @@ class SpaceInvaders(object):
 
                         ## UNCOMMENT FOR ACTUAL GAME ##
 
-                        self.startGame = True 
-                        self.leaderboardScreen = False
+                        # self.startGame = True 
+                        # self.leaderboardScreen = False
 
                         ## UNCOMMENT TO SKIP GAMEPLAY ##
 
-                        # self.startGame = False 
-                        # self.leaderboardScreen = True
+                        self.startGame = False 
+                        self.leaderboardScreen = True
 
                         ## END ##
 

@@ -127,18 +127,33 @@ class Leaderboard(object):
 			b.initialize()
 
 		alltime_scores = Score.get_alltime_scores()
-		print(alltime_scores)
+		logging.debug("All-time scores: \n{}".format(alltime_scores))
 
-		ALLTIME_PG.create_table(self.screen, [
-			["Rank", "Uname", "Affil.", "Score"],
-			["01", "Areeba", "4914", "9000"],
-			["02", "Maanav", "2291", "110"],
-		])
+		alltime_table = [["Rank", "Username", "Affil.", "Score"]]
+		for rank in range(1, min(len(alltime_scores), 10)+1):
+			alltime_table.append([
+				str(f'{rank:02}'), 
+				alltime_scores[rank-1].user.username, 
+				str(alltime_scores[rank-1].user.frc_team), 
+				str(alltime_scores[rank-1].score)
+			])
 
-		TODAY_PG.create_table(self.screen, [
-			["Rank", "Uname", "Affil.", "Score"],
-			["01", "Maanav", "2291", "110"],
-		])
+		ALLTIME_PG.create_table(self.screen, alltime_table)
+
+		today_scores = Score.get_today_scores()
+		logging.debug("Today scores: \n{}".format(today_scores))
+
+		today_table = [["Rank", "Username", "Affil.", "Score"]]
+
+		for rank in range(1, min(len(today_scores), 10)+1):
+			today_table.append([
+				str(f'{rank:02}'), 
+				today_scores[rank-1].user.username, 
+				str(today_scores[rank-1].user.frc_team), 
+				str(today_scores[rank-1].score)
+			])
+
+		TODAY_PG.create_table(self.screen, today_table)
 
 
 	def create(self):
