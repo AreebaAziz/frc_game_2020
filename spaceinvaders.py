@@ -381,6 +381,7 @@ class SpaceInvaders(object):
         # leaderboard
         self.leaderboardScreen = False
         self.leaderboard = Leaderboard(self.screen, self.background)
+        self.leaderboard.initialize()
 
         #---------- MAC ENG ADDITIONS END -------------#
 

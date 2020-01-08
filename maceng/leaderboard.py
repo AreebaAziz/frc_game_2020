@@ -1,6 +1,7 @@
 import logging
 from pygame import K_RIGHT, K_LEFT, K_RETURN
 from .constants import * 
+from .backend.models import User, Score
 
 # constants
 BTN_LABEL_SIZE = 25
@@ -118,10 +119,15 @@ class Leaderboard(object):
 		self.background = background
 		self.active_page = PAGES[0]
 		self.active_btn = BUTTONS[0]
+
+	def initialize(self):
 		for p in PAGES:
 			p.initialize()
 		for b in BUTTONS:
 			b.initialize()
+
+		alltime_scores = Score.get_alltime_scores()
+		print(alltime_scores)
 
 		ALLTIME_PG.create_table(self.screen, [
 			["Rank", "Uname", "Affil.", "Score"],

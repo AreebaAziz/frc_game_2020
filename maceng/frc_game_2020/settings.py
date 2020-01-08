@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
 #    'django.contrib.staticfiles',
-    'maceng.backend'
+    'maceng.backend',
+    'django_extensions'
 ]
 
 MIDDLEWARE = [
@@ -119,3 +120,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+SHELL_PLUS_POST_IMPORTS = [
+    ('maceng.backend.models', ('User', 'Score'))
+]
