@@ -10,6 +10,7 @@ from os.path import abspath, dirname
 from random import choice
 from maceng import receiver as maceng_receiver
 from maceng.leaderboard import Leaderboard
+from maceng.form_screen import EnterNameScreen
 from maceng.constants import *
 
 SCREEN = display.set_mode((800, 600))
@@ -383,6 +384,10 @@ class SpaceInvaders(object):
         self.leaderboard = Leaderboard(self.screen, self.background)
         self.leaderboard.initialize()
 
+        # enter username
+        self.enterNameScreen_active = False 
+        self.enterNameScreen = EnterNameScreen(self.screen, self.background)
+
         #---------- MAC ENG ADDITIONS END -------------#
 
     def reset(self, score):
@@ -583,21 +588,22 @@ class SpaceInvaders(object):
 
         passed = currentTime - self.timer
         if passed < 750:
+            # SHOW SCORE
             self.gameOverText.draw(self.screen)
             self.gameOverText_score.draw(self.screen)
         elif 750 < passed < 1500:
+            # HIDE SCORE
             self.screen.blit(self.background, (0, 0))
         elif 1500 < passed < 2250:
+            # SHOW SCORE
             self.gameOverText.draw(self.screen)
             self.gameOverText_score.draw(self.screen)
         elif 2250 < passed < 3000:
+            # HIDE SCORE
             self.screen.blit(self.background, (0, 0))
-        elif 3000 < passed < 3800:
-            self.gameOverText.draw(self.screen)
-            self.gameOverText_score.draw(self.screen)            
-        elif passed > 3800:
+        elif passed >= 3000:
             #---------- MAC ENG ADDITIONS START -----------#
-            self.leaderboardScreen = True
+            self.enterNameScreen_active = True
             self.gameOver = False 
             #---------- MAC ENG ADDITIONS END -----------#
 
@@ -630,13 +636,13 @@ class SpaceInvaders(object):
 
                         ## UNCOMMENT FOR ACTUAL GAME ##
 
-                        # self.startGame = True 
-                        # self.leaderboardScreen = False
+                        self.startGame = True 
+                        self.leaderboardScreen = False
 
                         ## UNCOMMENT TO SKIP GAMEPLAY ##
 
-                        self.startGame = False 
-                        self.leaderboardScreen = True
+                        # self.startGame = False 
+                        # self.leaderboardScreen = True
 
                         ## END ##
 
@@ -688,9 +694,17 @@ class SpaceInvaders(object):
                 self.create_game_over(currentTime, score=self.score)
 
             #---------- MAC ENG ADDITIONS START -----------#
-                if not self.gameover_signal:
-                    maceng_receiver.gameover(score=self.score)
-                    self.gameover_signal = True
+            elif self.enterNameScreen_active:
+                self.enterNameScreen.create()
+                for e in event.get():
+                    if self.should_exit(e):
+                        sys.exit()
+                    if e.type == KEYDOWN:
+                        username, goto_leaderboard = self.enterNameScreen.update(e.key)
+                        if goto_leaderboard:
+                            maceng_receiver.gameover(score=self.score, username=username)
+                            self.enterNameScreen_active = False
+                            self.leaderboard = True 
 
             elif self.leaderboardScreen:
                 self.leaderboard.create()

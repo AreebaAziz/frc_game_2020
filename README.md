@@ -1,5 +1,31 @@
 # McMaster Engineering Space Invaders for FRC 2020
 
+## HOW TO INSTALL+CONTRIBUTE
+
+```
+# install:
+git clone https://github.com/AreebaAziz/frc_game_2020.git frc_game_2020
+cd frc_game_2020
+python3 -m venv .
+. setupenv 
+pip install -r requirements
+python manage.py migrate
+
+# run:
+cd frc_game_2020
+. setupenv
+python spaceinvaders.py
+
+# contribute:
+git checkout master
+git pull
+git checkout -b YOUR_BRANCH_NAME
+#### make code changes now ####
+git add -A
+git commit -m "commit msg"
+git push
+```
+
 ## About
 
 This is a fork of the Python Space Invaders repo created for the FIRST Robotics Competition McMaster University 2020 event. 
