@@ -382,7 +382,7 @@ class SpaceInvaders(object):
         # leaderboard
         self.leaderboardScreen = False
         self.leaderboard = Leaderboard(self.screen, self.background)
-        self.leaderboard.initialize()
+        self.leaderboardInitialized = False 
 
         # enter username
         self.enterNameScreen_active = False 
@@ -550,11 +550,11 @@ class SpaceInvaders(object):
                                           True, True).keys():
             if self.life3.alive():
                 self.life3.kill()
-            elif self.life2.alive():
-                self.life2.kill()
-            elif self.life1.alive():
-                self.life1.kill()
-            else:
+            ######  COMMENT THIS FOR 1 LIFE DURING DEBUGGING #######
+            # elif self.life2.alive():
+            #     self.life2.kill()
+            # elif self.life1.alive():
+            #     self.life1.kill()
                 self.gameOver = True
                 self.startGame = False
             self.sounds['shipexplosion'].play()
@@ -701,12 +701,17 @@ class SpaceInvaders(object):
                         sys.exit()
                     if e.type == KEYDOWN:
                         username, goto_leaderboard = self.enterNameScreen.update(e.key)
+                        logging.debug("Username: {}".format(username))
                         if goto_leaderboard:
                             maceng_receiver.gameover(score=self.score, username=username)
                             self.enterNameScreen_active = False
-                            self.leaderboard = True 
+                            self.leaderboardScreen = True 
+                            self.enterNameScreen.reset()
 
             elif self.leaderboardScreen:
+                if not self.leaderboardInitialized:
+                    self.leaderboard.initialize()
+                    self.leaderboardInitialized = True 
                 self.leaderboard.create()
                 for e in event.get():
                     if self.should_exit(e):
@@ -716,6 +721,7 @@ class SpaceInvaders(object):
                         if change_to_mainscreen:
                             self.mainScreen = True 
                             self.leaderboardScreen = False 
+                            self.leaderboardInitialized = False 
 
             #---------- MAC ENG ADDITIONS END -----------#
             display.update()
