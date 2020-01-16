@@ -45,7 +45,7 @@ class EnterTextScreen:
 		logging.debug("Key pressed: {}".format(key))
 		mods = pygame.key.get_mods()
 
-		if ((key >= pygame.K_a and key <= pygame.K_z) 
+		if ((self.label != "team" and key >= pygame.K_a and key <= pygame.K_z) 
 			or (key >= pygame.K_0 and key <= pygame.K_9)
 			or (self.label == "email" and key == pygame.K_PERIOD)):
 
@@ -70,7 +70,8 @@ class EnterTextScreen:
 
 FORM_LABELS = [
 	"username",
-	"email"
+	"email",
+	"team"
 ]
 
 class FormScreensController:

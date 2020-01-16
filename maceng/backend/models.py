@@ -5,7 +5,7 @@ from django.db import models
 class User(models.Model):
 
     username = models.CharField(max_length=10)
-    frc_team = models.IntegerField(null=True, blank=True)
+    team = models.IntegerField(null=True, blank=True)
     email = models.CharField(max_length=64, null=True, blank=True)
 
     def __str__(self):
@@ -29,7 +29,7 @@ class Score(models.Model):
 		return list(cls.objects.filter(datetime__gte=timezone.now().replace(hour=0, minute=0, second=0)).order_by('-score')[:15])
 
 	@classmethod
-	def add_score(cls, username, score, email):
-		logging.debug("Adding score {} by user {} [{}] to database.".format(score, username, email))
-		user, created = User.objects.get_or_create(username=username[:12], email=email)
+	def add_score(cls, username, score, email, team):
+		logging.debug("Adding score {} by user {} [{}] [TEAM {}] to database.".format(score, username, email, team))
+		user, created = User.objects.get_or_create(username=username[:12], email=email, team=team)
 		cls.objects.create(score=score, user=user)

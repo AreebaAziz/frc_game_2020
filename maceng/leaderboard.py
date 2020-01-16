@@ -132,10 +132,11 @@ class Leaderboard(object):
 		alltime_table = [["Rank", "Username", "Affil.", "Score"]]
 		rank = 1
 		for score in alltime_scores:
+			team = str(score.user.team) if score.user.team else "-"
 			alltime_table.append([
 				str(f'{rank:02}'), 
 				score.user.username, 
-				str(score.user.frc_team), 
+				team, 
 				str(score.score)
 			])
 			rank += 1
@@ -149,10 +150,11 @@ class Leaderboard(object):
 
 		rank = 1
 		for score in today_scores:
+			team = str(score.user.team) if score.user.team else "-"
 			today_table.append([
 				str(f'{rank:02}'), 
 				score.user.username, 
-				str(score.user.frc_team), 
+				team, 
 				str(score.score)
 			])
 			rank += 1

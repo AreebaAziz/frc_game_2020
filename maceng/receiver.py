@@ -6,5 +6,6 @@ def gameover(form_data):
 	Score.add_score(
 		username=form_data["username"], 
 		score=form_data["score"],
-		email=form_data["email"]
+		email=form_data["email"],
+		team=int(form_data["team"])
 		)
