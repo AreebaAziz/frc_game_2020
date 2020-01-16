@@ -10,7 +10,7 @@ from os.path import abspath, dirname
 from random import choice
 from maceng import receiver as maceng_receiver
 from maceng.leaderboard import Leaderboard
-from maceng.form_screen import EnterNameScreen
+from maceng.form_screen import FormScreensController
 from maceng.constants import *
 
 SCREEN = display.set_mode((800, 600))
@@ -385,8 +385,8 @@ class SpaceInvaders(object):
         self.leaderboardInitialized = False 
 
         # enter username
-        self.enterNameScreen_active = False 
-        self.enterNameScreen = EnterNameScreen(self.screen, self.background)
+        self.formActive = False 
+        self.formScreens = FormScreensController(self.screen, self.background)
 
         #---------- MAC ENG ADDITIONS END -------------#
 
@@ -603,7 +603,7 @@ class SpaceInvaders(object):
             self.screen.blit(self.background, (0, 0))
         elif passed >= 3000:
             #---------- MAC ENG ADDITIONS START -----------#
-            self.enterNameScreen_active = True
+            self.formActive = True
             self.gameOver = False 
             #---------- MAC ENG ADDITIONS END -----------#
 
@@ -694,19 +694,20 @@ class SpaceInvaders(object):
                 self.create_game_over(currentTime, score=self.score)
 
             #---------- MAC ENG ADDITIONS START -----------#
-            elif self.enterNameScreen_active:
-                self.enterNameScreen.create()
+            elif self.formActive:
+                self.formScreens.create()
                 for e in event.get():
                     if self.should_exit(e):
                         sys.exit()
                     if e.type == KEYDOWN:
-                        username, goto_leaderboard = self.enterNameScreen.update(e.key)
-                        logging.debug("Username: {}".format(username))
+                        form_data, goto_leaderboard = self.formScreens.update(e.key)
+                        logging.debug("Form Data: \n{}".format(form_data))
                         if goto_leaderboard:
-                            maceng_receiver.gameover(score=self.score, username=username)
-                            self.enterNameScreen_active = False
+                            form_data["score"] = self.score
+                            maceng_receiver.gameover(form_data=form_data)
+                            self.formActive = False
                             self.leaderboardScreen = True 
-                            self.enterNameScreen.reset()
+                            self.formScreens.reset()
 
             elif self.leaderboardScreen:
                 if not self.leaderboardInitialized:
