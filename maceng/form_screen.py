@@ -1,5 +1,6 @@
 import logging
 from pygame import K_a, K_z, K_RETURN
+from .constants import * 
 
 class EnterTextScreen:
 	text = ""
@@ -10,13 +11,38 @@ class EnterTextScreen:
 		self.background = background
 
 	def create(self):
+		# need to do the import here to avoid cyclic import issue
+		from spaceinvaders import Text, TextVariableMsg
+
 		self.screen.blit(self.background, (0, 0))
 		logging.debug("On form {}".format(self.label))
+
+		self.label_text = Text(
+			textFont=FONT, 
+			size=40, 
+			color=GREEN,
+			message="ENTER " + self.label + ":", 
+			xpos=170, 
+			ypos=50
+		)
+		self.label_text.draw(self.screen)
+
+		self.input_text = TextVariableMsg(
+			textFont=FONT, 
+			size=40, 
+			color=YELLOW,
+			xpos=170, 
+			ypos=100
+		)
+		self.input_text.create("|").draw(self.screen)
 
 	def update(self, key):
 		logging.debug("Key pressed: {}".format(key))
 		if (key >= K_a and key <= K_z):
 			self.text += chr(key).upper()
+			self.screen.blit(self.background, (0, 0))
+			self.label_text.draw(self.screen)
+			self.input_text.create(self.text + "|").draw(self.screen)
 			return self.text, False 
 		elif (key == K_RETURN):
 			return self.text, True 
@@ -27,7 +53,7 @@ class EnterTextScreen:
 		self.text = ""
 
 FORM_LABELS = [
-	"username"
+	"username",
 ]
 
 class FormScreensController:

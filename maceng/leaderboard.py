@@ -245,14 +245,14 @@ class Leaderboard(object):
 		return False 
 
 BUTTONS = [
-	Button("Main menu", 30, 560, active=True),
-	Button("Enter name", 240, 560),
+	Button("Main menu", 100, 560, active=True),
+	# Button("Enter name", 240, 560),
 	Button("Prev",500, 560, disabled=True),
 	Button("Next", 590, 560),
 ]
 MAIN_MENU = BUTTONS[0]
-PREV_BTN = BUTTONS[2]
-NEXT_BTN = BUTTONS[3]
+PREV_BTN = BUTTONS[1]
+NEXT_BTN = BUTTONS[2]
 
 # pages 
 PAGES = [
