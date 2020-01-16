@@ -130,13 +130,15 @@ class Leaderboard(object):
 		logging.debug("All-time scores: \n{}".format(alltime_scores))
 
 		alltime_table = [["Rank", "Username", "Affil.", "Score"]]
-		for rank in range(1, min(len(alltime_scores), 10)+1):
+		rank = 1
+		for score in alltime_scores:
 			alltime_table.append([
 				str(f'{rank:02}'), 
-				alltime_scores[rank-1].user.username, 
-				str(alltime_scores[rank-1].user.frc_team), 
-				str(alltime_scores[rank-1].score)
+				score.user.username, 
+				str(score.user.frc_team), 
+				str(score.score)
 			])
+			rank += 1
 
 		ALLTIME_PG.create_table(self.screen, alltime_table)
 
@@ -145,13 +147,15 @@ class Leaderboard(object):
 
 		today_table = [["Rank", "Username", "Affil.", "Score"]]
 
-		for rank in range(1, min(len(today_scores), 10)+1):
+		rank = 1
+		for score in today_scores:
 			today_table.append([
 				str(f'{rank:02}'), 
-				today_scores[rank-1].user.username, 
-				str(today_scores[rank-1].user.frc_team), 
-				str(today_scores[rank-1].score)
+				score.user.username, 
+				str(score.user.frc_team), 
+				str(score.score)
 			])
+			rank += 1
 
 		TODAY_PG.create_table(self.screen, today_table)
 

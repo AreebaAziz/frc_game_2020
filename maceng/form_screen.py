@@ -1,5 +1,5 @@
 import logging
-from pygame import K_a, K_z, K_RETURN
+import pygame
 from .constants import * 
 
 class EnterTextScreen:
@@ -36,24 +36,41 @@ class EnterTextScreen:
 		)
 		self.input_text.create("|").draw(self.screen)
 
+	def _update_display(self):
+		self.screen.blit(self.background, (0, 0))
+		self.label_text.draw(self.screen)
+		self.input_text.create(self.text).draw(self.screen)
+
 	def update(self, key):
 		logging.debug("Key pressed: {}".format(key))
-		if (key >= K_a and key <= K_z):
-			self.text += chr(key).upper()
-			self.screen.blit(self.background, (0, 0))
-			self.label_text.draw(self.screen)
-			self.input_text.create(self.text + "|").draw(self.screen)
-			return self.text, False 
-		elif (key == K_RETURN):
-			return self.text, True 
-		else:
-			return self.text, False 
+		mods = pygame.key.get_mods()
+
+		if ((key >= pygame.K_a and key <= pygame.K_z) 
+			or (key >= pygame.K_0 and key <= pygame.K_9)
+			or (self.label == "email" and key == pygame.K_PERIOD)):
+
+			# dumb code that lets you use @ and . symbol for email input 
+			if (mods & pygame.KMOD_LSHIFT or mods & pygame.KMOD_CAPS or mods & pygame.KMOD_RSHIFT) and (key == pygame.K_2 and self.label == "email"):
+				self.text += "@"
+			else:
+				self.text += chr(key)
+			
+			self._update_display()
+		elif (key == pygame.K_BACKSPACE):
+			self.text = self.text[:-1]
+			self._update_display()
+		elif (key == pygame.K_RETURN):
+			if self.text != "":
+				return self.text, True 
+		
+		return self.text, False 
 
 	def reset(self):
 		self.text = ""
 
 FORM_LABELS = [
 	"username",
+	"email"
 ]
 
 class FormScreensController:
