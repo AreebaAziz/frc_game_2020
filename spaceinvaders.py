@@ -30,18 +30,25 @@ BLOCKERS_POSITION = 450
 ENEMY_DEFAULT_POSITION = 65  # Initial value for a new game
 ENEMY_MOVE_DOWN = 35
 
+def _scale_img(img):
+    global WIDTH_INC_RATIO, HEIGHT_INC_RATIO
+    ix, iy = img.get_size()
+    nx, ny = int(ix * WIDTH_INC_RATIO), int(iy * HEIGHT_INC_RATIO)
+    return transform.scale(img, (nx, ny))
 
 class Ship(sprite.Sprite):
     def __init__(self):
+        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
         sprite.Sprite.__init__(self)
-        self.image = IMAGES['ship']
-        self.rect = self.image.get_rect(topleft=(375, 540))
-        self.speed = 5
+        self.image = _scale_img(IMAGES['ship'])
+        self.rect = self.image.get_rect(topleft=(int(375 * WIDTH_INC_RATIO), int(540 * HEIGHT_INC_RATIO)))
+        self.speed = int(5 * WIDTH_INC_RATIO)
 
     def update(self, keys, *args):
-        if keys[K_LEFT] and self.rect.x > 10:
+        global WIDTH_INC_RATIO
+        if keys[K_LEFT] and self.rect.x > int(10 * WIDTH_INC_RATIO):
             self.rect.x -= self.speed
-        if keys[K_RIGHT] and self.rect.x < 740:
+        if keys[K_RIGHT] and self.rect.x < int(740 * WIDTH_INC_RATIO):
             self.rect.x += self.speed
         game.screen.blit(self.image, self.rect)
 
@@ -374,6 +381,7 @@ class SpaceInvaders(object):
         self.caption = display.set_caption('Space Invaders')
         self.screen = SCREEN
         self.background = image.load(IMAGE_PATH + 'background.jpg').convert()
+        self.background = transform.scale(self.background, (screen_width, screen_height))
         self.startGame = False
         self.mainScreen = True
         self.gameOver = False
