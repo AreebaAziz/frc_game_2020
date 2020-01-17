@@ -67,7 +67,7 @@ class Bullet(sprite.Sprite):
         global HEIGHT_INC_RATIO
         game.screen.blit(self.image, self.rect)
         self.rect.y += self.speed * self.direction
-        if self.rect.y < 15 or self.rect.y > 600:
+        if self.rect.y < int(15 * HEIGHT_INC_RATIO) or self.rect.y > int(600 * HEIGHT_INC_RATIO):
             self.kill()
 
 
@@ -264,6 +264,7 @@ class EnemyExplosion(sprite.Sprite):
         super(EnemyExplosion, self).__init__(*groups)
         self.image = transform.scale(self.get_image(enemy.row), (40, 35))
         self.image2 = transform.scale(self.get_image(enemy.row), (50, 45))
+        self.image, self.image2 = _scale_img(self.image), _scale_img(self.image2)
         self.rect = self.image.get_rect(topleft=(enemy.rect.x, enemy.rect.y))
         self.timer = time.get_ticks()
 
@@ -361,8 +362,8 @@ class TextVariableColor(object):
 
 #---------- MAC ENG ADDITIONS END -------------#
 
-HEIGHT_INC_RATIO = 1
-WIDTH_INC_RATIO = 1
+HEIGHT_INC_RATIO = 1.8
+WIDTH_INC_RATIO = 2.4
 
 class SpaceInvaders(object):
     def __init__(self):
@@ -557,18 +558,23 @@ class SpaceInvaders(object):
         return score
 
     def create_main_menu(self):
+        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
         self.enemy1 = IMAGES['enemy3_1']
         self.enemy1 = transform.scale(self.enemy1, (40, 40))
+        self.enemy1 = _scale_img(self.enemy1)
         self.enemy2 = IMAGES['enemy2_2']
         self.enemy2 = transform.scale(self.enemy2, (40, 40))
+        self.enemy2 = _scale_img(self.enemy2)
         self.enemy3 = IMAGES['enemy1_2']
         self.enemy3 = transform.scale(self.enemy3, (40, 40))
+        self.enemy3 = _scale_img(self.enemy3)
         self.enemy4 = IMAGES['mystery']
         self.enemy4 = transform.scale(self.enemy4, (80, 40))
-        self.screen.blit(self.enemy1, (318, 270))
-        self.screen.blit(self.enemy2, (318, 320))
-        self.screen.blit(self.enemy3, (318, 370))
-        self.screen.blit(self.enemy4, (299, 420))
+        self.enemy4 = _scale_img(self.enemy4)
+        self.screen.blit(self.enemy1, (int(318 * WIDTH_INC_RATIO), int(270 * HEIGHT_INC_RATIO)))
+        self.screen.blit(self.enemy2, (int(318 * WIDTH_INC_RATIO), int(320 * HEIGHT_INC_RATIO)))
+        self.screen.blit(self.enemy3, (int(318 * WIDTH_INC_RATIO), int(370 * HEIGHT_INC_RATIO)))
+        self.screen.blit(self.enemy4, (int(299 * WIDTH_INC_RATIO), int(420 * HEIGHT_INC_RATIO)))
 
     def check_collisions(self):
         sprite.groupcollide(self.bullets, self.enemyBullets, True, True)
