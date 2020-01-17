@@ -523,11 +523,12 @@ class SpaceInvaders(object):
                             self.sounds['shoot2'].play()
 
     def make_enemies(self):
+        global WIDTH_INC_RATIO
         enemies = EnemiesGroup(10, 5)
         for row in range(5):
             for column in range(10):
                 enemy = Enemy(row, column)
-                enemy.rect.x = 157 + (column * 50)
+                enemy.rect.x = int(157 * WIDTH_INC_RATIO) + (column * 50)
                 enemy.rect.y = self.enemyPosition + (row * 45)
                 enemies.add(enemy)
 
