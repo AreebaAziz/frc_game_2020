@@ -56,17 +56,19 @@ class Ship(sprite.Sprite):
 class Bullet(sprite.Sprite):
     def __init__(self, xpos, ypos, direction, speed, filename, side):
         sprite.Sprite.__init__(self)
-        self.image = IMAGES[filename]
-        self.rect = self.image.get_rect(topleft=(xpos, ypos))
+        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
+        self.image = _scale_img(IMAGES[filename])
+        self.rect = self.image.get_rect(topleft=(int(xpos * WIDTH_INC_RATIO), int(ypos * HEIGHT_INC_RATIO)))
         self.speed = speed
         self.direction = direction
         self.side = side
         self.filename = filename
 
     def update(self, keys, *args):
+        global HEIGHT_INC_RATIO
         game.screen.blit(self.image, self.rect)
         self.rect.y += self.speed * self.direction
-        if self.rect.y < 15 or self.rect.y > 600:
+        if self.rect.y < int(15 * HEIGHT_INC_RATIO) or self.rect.y > int(600 * HEIGHT_INC_RATIO):
             self.kill()
 
 
@@ -91,6 +93,7 @@ class Enemy(sprite.Sprite):
         game.screen.blit(self.image, self.rect)
 
     def load_images(self):
+        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
         images = {0: ['1_2', '1_1'],
                   1: ['2_2', '2_1'],
                   2: ['2_2', '2_1'],
@@ -99,12 +102,15 @@ class Enemy(sprite.Sprite):
                   }
         img1, img2 = (IMAGES['enemy{}'.format(img_num)] for img_num in
                       images[self.row])
-        self.images.append(transform.scale(img1, (40, 35)))
-        self.images.append(transform.scale(img2, (40, 35)))
+
+        img1, img2 = transform.scale(img1, (40, 35)), transform.scale(img2, (40, 35))
+        self.images.append(_scale_img(img1))
+        self.images.append(_scale_img(img2))
 
 
 class EnemiesGroup(sprite.Group):
     def __init__(self, columns, rows):
+        global HEIGHT_INC_RATIO
         sprite.Group.__init__(self)
         self.enemies = [[None] * columns for _ in range(rows)]
         self.columns = columns
@@ -117,7 +123,7 @@ class EnemiesGroup(sprite.Group):
         self.leftMoves = 30
         self.moveNumber = 15
         self.timer = time.get_ticks()
-        self.bottom = game.enemyPosition + ((rows - 1) * 45) + 35
+        self.bottom = int((game.enemyPosition + ((rows - 1) * 45) + 35) * HEIGHT_INC_RATIO)
         self._aliveColumns = list(range(columns))
         self._leftAliveColumn = 0
         self._rightAliveColumn = columns - 1
@@ -197,9 +203,10 @@ class EnemiesGroup(sprite.Group):
 
 class Blocker(sprite.Sprite):
     def __init__(self, size, color, row, column):
+        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
         sprite.Sprite.__init__(self)
-        self.height = size
-        self.width = size
+        self.height = size * HEIGHT_INC_RATIO
+        self.width = size * WIDTH_INC_RATIO
         self.color = color
         self.image = Surface((self.width, self.height))
         self.image.fill(self.color)
@@ -360,7 +367,7 @@ WIDTH_INC_RATIO = 1
 
 class SpaceInvaders(object):
     def __init__(self):
-        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
+        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO, BLOCKERS_POSITION, ENEMY_DEFAULT_POSITION, ENEMY_MOVE_DOWN
         # It seems, in Linux buffersize=512 is not enough, use 4096 to prevent:
         #   ALSA lib pcm.c:7963:(snd_pcm_recover) underrun occurred
         mixer.pre_init(44100, -16, 1, 4096)
@@ -375,6 +382,11 @@ class SpaceInvaders(object):
         WIDTH_INC_RATIO = screen_width / ORIGINAL_WIDTH
         HEIGHT_INC_RATIO = screen_height / ORIGINAL_HEIGHT
         logging.debug("Width increase ratio = {}, Height increase ratio = {}".format(WIDTH_INC_RATIO, HEIGHT_INC_RATIO))
+
+        BLOCKERS_POSITION = int(BLOCKERS_POSITION * HEIGHT_INC_RATIO)
+        ENEMY_DEFAULT_POSITION = int(ENEMY_DEFAULT_POSITION * HEIGHT_INC_RATIO)
+        ENEMY_MOVE_DOWN = int(ENEMY_MOVE_DOWN * HEIGHT_INC_RATIO)
+
         #---------- MAC ENG ADDITIONS END -------------#
 
         self.clock = time.Clock()
@@ -386,7 +398,7 @@ class SpaceInvaders(object):
         self.mainScreen = True
         self.gameOver = False
         # Counter for enemy starting position (increased each new round)
-        self.enemyPosition = ENEMY_DEFAULT_POSITION * HEIGHT_INC_RATIO
+        self.enemyPosition = ENEMY_DEFAULT_POSITION
         self.titleText = Text(FONT, 50, 'Space Invaders', WHITE, 164, 155)
         self.titleText2 = Text(FONT, 25, 'Press any key to continue', WHITE,
                                201, 225)
@@ -442,11 +454,12 @@ class SpaceInvaders(object):
         self.shipAlive = True
 
     def make_blockers(self, number):
+        global WIDTH_INC_RATIO
         blockerGroup = sprite.Group()
         for row in range(4):
             for column in range(9):
                 blocker = Blocker(10, GREEN, row, column)
-                blocker.rect.x = 50 + (200 * number) + (column * blocker.width)
+                blocker.rect.x = int(50 * WIDTH_INC_RATIO) + (int(200 * WIDTH_INC_RATIO) * number) + (column * blocker.width)
                 blocker.rect.y = BLOCKERS_POSITION + (row * blocker.height)
                 blockerGroup.add(blocker)
         return blockerGroup
