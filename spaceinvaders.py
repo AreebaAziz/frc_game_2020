@@ -13,7 +13,10 @@ from maceng.leaderboard import Leaderboard
 from maceng.form_screen import FormScreensController
 from maceng.constants import *
 
-SCREEN = display.set_mode((800, 600))
+# SCREEN = display.set_mode((800, 600))
+SCREEN = display.set_mode((0, 0), FULLSCREEN)
+ORIGINAL_WIDTH, ORIGINAL_HEIGHT = 800, 600
+
 IMG_NAMES = ['ship', 'mystery',
              'enemy1_1', 'enemy1_2',
              'enemy2_1', 'enemy2_2',
@@ -269,8 +272,9 @@ class EnemyExplosion(sprite.Sprite):
 class MysteryExplosion(sprite.Sprite):
     def __init__(self, mystery, score, *groups):
         super(MysteryExplosion, self).__init__(*groups)
-        self.text = Text(FONT, 20, str(score), WHITE,
-                         mystery.rect.x + 20, mystery.rect.y + 6)
+        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
+        self.text = Text(FONT, int(20 * HEIGHT_INC_RATIO), str(score), WHITE,
+                         mystery.rect.x + int(20 * WIDTH_INC_RATIO), mystery.rect.y + int(6 * HEIGHT_INC_RATIO))
         self.timer = time.get_ticks()
 
     def update(self, current_time, *args):
@@ -298,10 +302,11 @@ class ShipExplosion(sprite.Sprite):
 
 class Life(sprite.Sprite):
     def __init__(self, xpos, ypos):
+        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
         sprite.Sprite.__init__(self)
         self.image = IMAGES['ship']
-        self.image = transform.scale(self.image, (23, 23))
-        self.rect = self.image.get_rect(topleft=(xpos, ypos))
+        self.image = transform.scale(self.image, (int(23 * WIDTH_INC_RATIO), int(23 * HEIGHT_INC_RATIO)))
+        self.rect = self.image.get_rect(topleft=(int(xpos * WIDTH_INC_RATIO), int(ypos * HEIGHT_INC_RATIO)))
 
     def update(self, *args):
         game.screen.blit(self.image, self.rect)
@@ -309,9 +314,10 @@ class Life(sprite.Sprite):
 
 class Text(object):
     def __init__(self, textFont, size, message, color, xpos, ypos):
-        self.font = font.Font(textFont, size)
+        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
+        self.font = font.Font(textFont, int(size * HEIGHT_INC_RATIO))
         self.surface = self.font.render(message, True, color)
-        self.rect = self.surface.get_rect(topleft=(xpos, ypos))
+        self.rect = self.surface.get_rect(topleft=(int(xpos * WIDTH_INC_RATIO), int(ypos * HEIGHT_INC_RATIO)))
 
     def draw(self, surface):
         surface.blit(self.surface, self.rect)
@@ -342,12 +348,28 @@ class TextVariableColor(object):
 
 #---------- MAC ENG ADDITIONS END -------------#
 
+HEIGHT_INC_RATIO = 1
+WIDTH_INC_RATIO = 1
+
 class SpaceInvaders(object):
     def __init__(self):
+        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
         # It seems, in Linux buffersize=512 is not enough, use 4096 to prevent:
         #   ALSA lib pcm.c:7963:(snd_pcm_recover) underrun occurred
         mixer.pre_init(44100, -16, 1, 4096)
         init()
+
+        #---------- MAC ENG ADDITIONS START -----------#
+        # get the new fullscreen width and height and calculate ratio based on the original game's dimensions
+        display_info = display.Info() 
+        screen_width, screen_height = display_info.current_w, display_info.current_h
+
+        logging.debug("Screen width = {}, Screen height = {}".format(screen_width, screen_height))
+        WIDTH_INC_RATIO = screen_width / ORIGINAL_WIDTH
+        HEIGHT_INC_RATIO = screen_height / ORIGINAL_HEIGHT
+        logging.debug("Width increase ratio = {}, Height increase ratio = {}".format(WIDTH_INC_RATIO, HEIGHT_INC_RATIO))
+        #---------- MAC ENG ADDITIONS END -------------#
+
         self.clock = time.Clock()
         self.caption = display.set_caption('Space Invaders')
         self.screen = SCREEN
@@ -356,7 +378,7 @@ class SpaceInvaders(object):
         self.mainScreen = True
         self.gameOver = False
         # Counter for enemy starting position (increased each new round)
-        self.enemyPosition = ENEMY_DEFAULT_POSITION
+        self.enemyPosition = ENEMY_DEFAULT_POSITION * HEIGHT_INC_RATIO
         self.titleText = Text(FONT, 50, 'Space Invaders', WHITE, 164, 155)
         self.titleText2 = Text(FONT, 25, 'Press any key to continue', WHITE,
                                201, 225)
