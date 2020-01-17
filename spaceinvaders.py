@@ -55,10 +55,10 @@ class Ship(sprite.Sprite):
 
 class Bullet(sprite.Sprite):
     def __init__(self, xpos, ypos, direction, speed, filename, side):
-        sprite.Sprite.__init__(self)
         global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
+        sprite.Sprite.__init__(self)
         self.image = _scale_img(IMAGES[filename])
-        self.rect = self.image.get_rect(topleft=(int(xpos * WIDTH_INC_RATIO), int(ypos * HEIGHT_INC_RATIO)))
+        self.rect = self.image.get_rect(topleft=(xpos, ypos))
         self.speed = speed
         self.direction = direction
         self.side = side
@@ -523,18 +523,19 @@ class SpaceInvaders(object):
                             self.sounds['shoot2'].play()
 
     def make_enemies(self):
-        global WIDTH_INC_RATIO
+        global WIDTH_INC_RATIO, HEIGHT_INC_RATIO
         enemies = EnemiesGroup(10, 5)
         for row in range(5):
             for column in range(10):
                 enemy = Enemy(row, column)
-                enemy.rect.x = int(157 * WIDTH_INC_RATIO) + (column * 50)
-                enemy.rect.y = self.enemyPosition + (row * 45)
+                enemy.rect.x = int(157 * WIDTH_INC_RATIO) + (column * int(50 * WIDTH_INC_RATIO))
+                enemy.rect.y = self.enemyPosition + (row * int(45 * HEIGHT_INC_RATIO))
                 enemies.add(enemy)
 
         self.enemies = enemies
 
     def make_enemies_shoot(self):
+        global WIDTH_INC_RATIO, HEIGHT_INC_RATIO
         if (time.get_ticks() - self.timer) > 700 and self.enemies:
             enemy = self.enemies.random_bottom()
             self.enemyBullets.add(
