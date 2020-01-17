@@ -55,7 +55,6 @@ class Ship(sprite.Sprite):
 
 class Bullet(sprite.Sprite):
     def __init__(self, xpos, ypos, direction, speed, filename, side):
-        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
         sprite.Sprite.__init__(self)
         self.image = _scale_img(IMAGES[filename])
         self.rect = self.image.get_rect(topleft=(xpos, ypos))
@@ -68,7 +67,7 @@ class Bullet(sprite.Sprite):
         global HEIGHT_INC_RATIO
         game.screen.blit(self.image, self.rect)
         self.rect.y += self.speed * self.direction
-        if self.rect.y < int(15 * HEIGHT_INC_RATIO) or self.rect.y > int(600 * HEIGHT_INC_RATIO):
+        if self.rect.y < 15 or self.rect.y > 600:
             self.kill()
 
 
