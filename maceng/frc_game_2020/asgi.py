@@ -11,6 +11,9 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'maceng.frc_game_2020.settings')
+try:
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'maceng.frc_game_2020.settings')
+except:
+    os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 application = get_asgi_application()

@@ -5,7 +5,10 @@ import sys
 
 
 def main():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'maceng.frc_game_2020.settings')
+    try:
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'maceng.frc_game_2020.settings')
+    except:
+        os.environ["SDL_VIDEODRIVER"] = "dummy"
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
