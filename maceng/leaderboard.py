@@ -12,8 +12,6 @@ TABLE_TXT_SIZE = 20
 TABLE_HDR_COLOR = PURPLE
 TABLE_TXT_COLOR = BLUE
 
-# NOTE - Button active and Page active are NOT the same thing!! #
-
 class Button(object):
 
 	def __init__(self, label, xpos, ypos, active=False, disabled=False):
@@ -117,8 +115,7 @@ class Leaderboard(object):
 	def __init__(self, screen, background):
 		self.screen = screen 
 		self.background = background
-		self.active_page = PAGES[0]
-		self.active_btn = BUTTONS[0]
+		self.active_index = 0
 
 	def initialize(self):
 		for p in PAGES:
@@ -129,7 +126,7 @@ class Leaderboard(object):
 		alltime_scores = Score.get_alltime_scores()
 		logging.debug("All-time scores: \n{}".format(alltime_scores))
 
-		alltime_table = [["Rank", "Username", "Affil.", "Score"]]
+		alltime_table = [["Rank", "Username", "Team", "Score"]]
 		rank = 1
 		for score in alltime_scores:
 			team = str(score.user.team) if score.user.team else "-"
@@ -146,7 +143,7 @@ class Leaderboard(object):
 		today_scores = Score.get_today_scores()
 		logging.debug("Today scores: \n{}".format(today_scores))
 
-		today_table = [["Rank", "Username", "Affil.", "Score"]]
+		today_table = [["Rank", "Username", "Team", "Score"]]
 
 		rank = 1
 		for score in today_scores:
@@ -166,7 +163,7 @@ class Leaderboard(object):
 		self.screen.blit(self.background, (0, 0))
 
 		# draw title text
-		self.active_page.create_title_texts(self.screen)
+		PAGES[self.active_index].create_title_texts(self.screen)
 
 		# draw menu buttons
 		for b in BUTTONS:
@@ -178,60 +175,30 @@ class Leaderboard(object):
 				b.text.create(BTN_COLOR_IDLE).draw(self.screen)
 
 		# draw table if applicable 
-		if self.active_page.table is not None:
-			for t in self.active_page.table:
+		if PAGES[self.active_index].table is not None:
+			for t in PAGES[self.active_index].table:
 				t.draw(self.screen)
 
 
 	def _inc_active_btn(self):
-		original_index = BUTTONS.index(self.active_btn)
+		original_index = self.active_index
 		new_index = original_index + 1
 		while (new_index < len(BUTTONS) and BUTTONS[new_index].disabled):
 			new_index += 1
 		if (new_index < len(BUTTONS) and not BUTTONS[new_index].disabled):
-			self.active_btn = BUTTONS[new_index]
+			self.active_index = new_index
 			BUTTONS[new_index].active = True 
 			BUTTONS[original_index].active = False
 
 	def _dec_active_btn(self):
-		original_index = BUTTONS.index(self.active_btn)
+		original_index = self.active_index
 		new_index = original_index - 1
 		while (new_index >= 0 and BUTTONS[new_index].disabled):
 			new_index -= 1
 		if (new_index >= 0 and not BUTTONS[new_index].disabled):
-			self.active_btn = BUTTONS[new_index]
+			self.active_index = new_index
 			BUTTONS[new_index].active = True 
-			BUTTONS[original_index].active = False
-
-	def _inc_active_page(self):
-		original_index = PAGES.index(self.active_page)
-		new_index = original_index + 1
-		if (new_index < len(PAGES)):
-			self.active_page = PAGES[new_index]
-			PAGES[new_index].active = True 
-			PAGES[original_index].active = False
-		if (new_index == len(PAGES)-1):
-			# on the last page, disable the NEXT button
-			NEXT_BTN.disabled = True 
-			self._dec_active_btn()
-		if (original_index == 0):
-			# if we just moved from the first page, enable the PREV button
-			PREV_BTN.disabled = False 
-
-	def _dec_active_page(self):
-		original_index = PAGES.index(self.active_page)
-		new_index = original_index - 1
-		if (new_index >= 0):
-			self.active_page = PAGES[new_index]
-			PAGES[new_index].active = True 
-			PAGES[original_index].active = False
-		if (new_index == 0):
-			# on the first page, disable the PREV button
-			PREV_BTN.disabled = True 
-			self._inc_active_btn()
-		if (original_index == len(PAGES)-1):
-			# if we just moved from the last page, enable the NEXT button
-			NEXT_BTN.disabled = False 		
+			BUTTONS[original_index].active = False		
 
 	def update(self, key_press):
 		if (key_press == K_RIGHT):
@@ -241,31 +208,26 @@ class Leaderboard(object):
 			logging.debug("left key pressed")
 			self._dec_active_btn()
 		elif (key_press == K_RETURN):
-			logging.debug("return key pressed on menu button \"{}\"".format(self.active_btn.label))
-			if (self.active_btn == MAIN_MENU):
+			logging.debug("return key pressed on menu button \"{}\"".format(BUTTONS[self.active_index].label))
+			if (BUTTONS[self.active_index] == MAIN_MENU):
 				return True 
-			elif (self.active_btn == NEXT_BTN):
-				self._inc_active_page()
-			elif (self.active_btn == PREV_BTN):
-				self._dec_active_page()
 		return False 
 
 BUTTONS = [
 	Button("Main menu", 100, 560, active=True),
-	# Button("Enter name", 240, 560),
-	Button("Prev",500, 560, disabled=True),
-	Button("Next", 590, 560),
+	Button("All-time",200, 560),
+	Button("Today", 300, 560),
+	Button("Credits", 400, 560),
 ]
 MAIN_MENU = BUTTONS[0]
-PREV_BTN = BUTTONS[1]
-NEXT_BTN = BUTTONS[2]
 
 # pages 
+ALLTIME_PG = Page("Leaderboard", subtitle="All-time", active=True)
+TODAY_PG = Page("Leaderboard", subtitle="Today")
+
 PAGES = [
-	Page("Leaderboard", subtitle="All-time", active=True),
-	Page("Leaderboard", subtitle="Today"),
+	ALLTIME_PG,
+	ALLTIME_PG, 
+	TODAY_PG,
 	Page("Credits"),
 ]
-
-ALLTIME_PG = PAGES[0]
-TODAY_PG = PAGES[1]
