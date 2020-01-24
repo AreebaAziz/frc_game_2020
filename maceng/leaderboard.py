@@ -215,9 +215,9 @@ class Leaderboard(object):
 
 BUTTONS = [
 	Button("Main menu", 100, 560, active=True),
-	Button("All-time",200, 560),
-	Button("Today", 300, 560),
-	Button("Credits", 400, 560),
+	Button("All-time",300, 560),
+	Button("Today", 500, 560),
+	Button("Credits", 600, 560),
 ]
 MAIN_MENU = BUTTONS[0]
 
