@@ -2,20 +2,21 @@ import logging
 import pygame
 from .constants import * 
 
-class EnterTextScreen:
+class EnterTextInput:
 	text = ""
+	active = False 
 
-	def __init__(self, label, screen, background):
+	def __init__(self, label, screen, background, ypos):
 		self.label = label
 		self.screen = screen
 		self.background = background
+		self.ypos = ypos
 
 	def create(self):
 		# need to do the import here to avoid cyclic import issue
 		from spaceinvaders import Text, TextVariableMsg
 
-		self.screen.blit(self.background, (0, 0))
-		logging.debug("On form {}".format(self.label))
+		logging.debug("Creating input {}".format(self.label))
 
 		self.label_text = Text(
 			textFont=FONT, 
@@ -23,7 +24,7 @@ class EnterTextScreen:
 			color=GREEN,
 			message="ENTER " + self.label + ":", 
 			xpos=170, 
-			ypos=50
+			ypos=self.ypos
 		)
 		self.label_text.draw(self.screen)
 
@@ -32,14 +33,17 @@ class EnterTextScreen:
 			size=40, 
 			color=YELLOW,
 			xpos=170, 
-			ypos=100
+			ypos=self.ypos + 50
 		)
-		self.input_text.create("|").draw(self.screen)
+		self.input_text.create(self._cursor).draw(self.screen)
 
-	def _update_display(self):
-		self.screen.blit(self.background, (0, 0))
+	@property
+	def _cursor(self):
+		return "|" if self.active else ""
+	
+	def draw(self):
 		self.label_text.draw(self.screen)
-		self.input_text.create(self.text).draw(self.screen)
+		self.input_text.create(self.text + self._cursor).draw(self.screen)
 
 	def update(self, key):
 		logging.debug("Key pressed: {}".format(key))
@@ -55,12 +59,13 @@ class EnterTextScreen:
 			else:
 				self.text += chr(key)
 			
-			self._update_display()
+			# self.draw()
 		elif (key == pygame.K_BACKSPACE):
 			self.text = self.text[:-1]
-			self._update_display()
+			# self.draw()
 		elif (key == pygame.K_RETURN):
 			if self.text != "":
+				self.active = False 
 				return self.text, True 
 		
 		return self.text, False 
@@ -81,18 +86,28 @@ class FormScreensController:
 		self.background = background
 
 		self.forms = {}
+		ypos = 50
 		for l in FORM_LABELS:
-			self.forms[l] = EnterTextScreen(l, screen, background)
+			self.forms[l] = EnterTextInput(l, screen, background, ypos)
+			ypos += 120
 
 		self.form_data = {}.fromkeys(self.forms.keys(), "")
 		self.current_form = self.forms[FORM_LABELS[0]]
+		self.current_form.active = True 
 
 		self.created = False 
 
 	def create(self):
 		if not self.created:
-			self.current_form.create()
+			self.screen.blit(self.background, (0, 0))
+			for label, form in self.forms.items():
+				form.create()
 			self.created = True
+
+	def draw(self):
+		self.screen.blit(self.background, (0, 0))
+		for label, form in self.forms.items():
+			form.draw()
 
 	def update(self, key):
 		text, done = self.current_form.update(key) 
@@ -104,9 +119,12 @@ class FormScreensController:
 			i = FORM_LABELS.index(self.current_form.label)
 			if (i < len(FORM_LABELS)-1):
 				self.current_form = self.forms[FORM_LABELS[i+1]]
-				self.current_form.create()
+				self.current_form.active = True 
+				self.draw()
 			else:
 				return self.form_data, True 
+		else:
+			self.draw()
 
 		return self.form_data, False 
 
