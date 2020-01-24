@@ -7,6 +7,7 @@ import logging
 from pygame import *
 import sys
 from os.path import abspath, dirname
+from os import environ
 from random import choice
 from maceng import receiver as maceng_receiver
 from maceng.leaderboard import Leaderboard
@@ -31,24 +32,21 @@ ENEMY_DEFAULT_POSITION = 65  # Initial value for a new game
 ENEMY_MOVE_DOWN = 35
 
 def _scale_img(img):
-    global WIDTH_INC_RATIO, HEIGHT_INC_RATIO
     ix, iy = img.get_size()
-    nx, ny = int(ix * WIDTH_INC_RATIO), int(iy * HEIGHT_INC_RATIO)
+    nx, ny = int(ix * get_width_inc()), int(iy * get_height_inc())
     return transform.scale(img, (nx, ny))
 
 class Ship(sprite.Sprite):
     def __init__(self):
-        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
         sprite.Sprite.__init__(self)
         self.image = _scale_img(IMAGES['ship'])
-        self.rect = self.image.get_rect(topleft=(int(375 * WIDTH_INC_RATIO), int(540 * HEIGHT_INC_RATIO)))
-        self.speed = int(5 * WIDTH_INC_RATIO)
+        self.rect = self.image.get_rect(topleft=(int(375 * get_width_inc()), int(540 * get_height_inc())))
+        self.speed = int(5 * get_width_inc())
 
     def update(self, keys, *args):
-        global WIDTH_INC_RATIO
-        if keys[K_LEFT] and self.rect.x > int(10 * WIDTH_INC_RATIO):
+        if keys[K_LEFT] and self.rect.x > int(10 * get_width_inc()):
             self.rect.x -= self.speed
-        if keys[K_RIGHT] and self.rect.x < int(740 * WIDTH_INC_RATIO):
+        if keys[K_RIGHT] and self.rect.x < int(740 * get_width_inc()):
             self.rect.x += self.speed
         game.screen.blit(self.image, self.rect)
 
@@ -64,10 +62,9 @@ class Bullet(sprite.Sprite):
         self.filename = filename
 
     def update(self, keys, *args):
-        global HEIGHT_INC_RATIO
         game.screen.blit(self.image, self.rect)
         self.rect.y += self.speed * self.direction
-        if self.rect.y < int(15 * HEIGHT_INC_RATIO) or self.rect.y > int(600 * HEIGHT_INC_RATIO):
+        if self.rect.y < int(15 * get_height_inc()) or self.rect.y > int(600 * get_height_inc()):
             self.kill()
 
 
@@ -92,7 +89,6 @@ class Enemy(sprite.Sprite):
         game.screen.blit(self.image, self.rect)
 
     def load_images(self):
-        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
         images = {0: ['1_2', '1_1'],
                   1: ['2_2', '2_1'],
                   2: ['2_2', '2_1'],
@@ -109,7 +105,6 @@ class Enemy(sprite.Sprite):
 
 class EnemiesGroup(sprite.Group):
     def __init__(self, columns, rows):
-        global HEIGHT_INC_RATIO
         sprite.Group.__init__(self)
         self.enemies = [[None] * columns for _ in range(rows)]
         self.columns = columns
@@ -122,7 +117,7 @@ class EnemiesGroup(sprite.Group):
         self.leftMoves = 30
         self.moveNumber = 15
         self.timer = time.get_ticks()
-        self.bottom = int((game.enemyPosition + ((rows - 1) * 45) + 35) * HEIGHT_INC_RATIO)
+        self.bottom = int((game.enemyPosition + ((rows - 1) * 45) + 35) * get_height_inc())
         self._aliveColumns = list(range(columns))
         self._leftAliveColumn = 0
         self._rightAliveColumn = columns - 1
@@ -202,10 +197,9 @@ class EnemiesGroup(sprite.Group):
 
 class Blocker(sprite.Sprite):
     def __init__(self, size, color, row, column):
-        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
         sprite.Sprite.__init__(self)
-        self.height = size * HEIGHT_INC_RATIO
-        self.width = size * WIDTH_INC_RATIO
+        self.height = size * get_height_inc()
+        self.width = size * get_width_inc()
         self.color = color
         self.image = Surface((self.width, self.height))
         self.image.fill(self.color)
@@ -286,9 +280,8 @@ class EnemyExplosion(sprite.Sprite):
 class MysteryExplosion(sprite.Sprite):
     def __init__(self, mystery, score, *groups):
         super(MysteryExplosion, self).__init__(*groups)
-        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
-        self.text = Text(FONT, int(20 * HEIGHT_INC_RATIO), str(score), WHITE,
-                         mystery.rect.x + int(20 * WIDTH_INC_RATIO), mystery.rect.y + int(6 * HEIGHT_INC_RATIO))
+        self.text = Text(FONT, int(20 * get_height_inc()), str(score), WHITE,
+                         mystery.rect.x + int(20 * get_width_inc()), mystery.rect.y + int(6 * get_height_inc()))
         self.timer = time.get_ticks()
 
     def update(self, current_time, *args):
@@ -316,11 +309,10 @@ class ShipExplosion(sprite.Sprite):
 
 class Life(sprite.Sprite):
     def __init__(self, xpos, ypos):
-        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
         sprite.Sprite.__init__(self)
         self.image = IMAGES['ship']
-        self.image = transform.scale(self.image, (int(23 * WIDTH_INC_RATIO), int(23 * HEIGHT_INC_RATIO)))
-        self.rect = self.image.get_rect(topleft=(int(xpos * WIDTH_INC_RATIO), int(ypos * HEIGHT_INC_RATIO)))
+        self.image = transform.scale(self.image, (int(23 * get_width_inc()), int(23 * get_height_inc())))
+        self.rect = self.image.get_rect(topleft=(int(xpos * get_width_inc()), int(ypos * get_height_inc())))
 
     def update(self, *args):
         game.screen.blit(self.image, self.rect)
@@ -328,10 +320,9 @@ class Life(sprite.Sprite):
 
 class Text(object):
     def __init__(self, textFont, size, message, color, xpos, ypos):
-        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
-        self.font = font.Font(textFont, int(size * HEIGHT_INC_RATIO))
+        self.font = font.Font(textFont, int(size * get_height_inc()))
         self.surface = self.font.render(message, True, color)
-        self.rect = self.surface.get_rect(topleft=(int(xpos * WIDTH_INC_RATIO), int(ypos * HEIGHT_INC_RATIO)))
+        self.rect = self.surface.get_rect(topleft=(int(xpos * get_width_inc()), int(ypos * get_height_inc())))
 
     def draw(self, surface):
         surface.blit(self.surface, self.rect)
@@ -362,12 +353,18 @@ class TextVariableColor(object):
 
 #---------- MAC ENG ADDITIONS END -------------#
 
-HEIGHT_INC_RATIO = 1.8
-WIDTH_INC_RATIO = 2.4
+def set_display_vals(height, width):
+    environ['DISPLAY_HEIGHT'], environ['DISPLAY_WIDTH'] = str(height), str(width)
+
+def get_height_inc():
+    return int(environ['DISPLAY_HEIGHT']) / ORIGINAL_HEIGHT
+
+def get_width_inc():
+    return int(environ['DISPLAY_WIDTH']) / ORIGINAL_WIDTH
 
 class SpaceInvaders(object):
     def __init__(self):
-        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO, BLOCKERS_POSITION, ENEMY_DEFAULT_POSITION, ENEMY_MOVE_DOWN
+        global BLOCKERS_POSITION, ENEMY_DEFAULT_POSITION, ENEMY_MOVE_DOWN
         # It seems, in Linux buffersize=512 is not enough, use 4096 to prevent:
         #   ALSA lib pcm.c:7963:(snd_pcm_recover) underrun occurred
         mixer.pre_init(44100, -16, 1, 4096)
@@ -379,13 +376,12 @@ class SpaceInvaders(object):
         screen_width, screen_height = display_info.current_w, display_info.current_h
 
         logging.debug("Screen width = {}, Screen height = {}".format(screen_width, screen_height))
-        WIDTH_INC_RATIO = screen_width / ORIGINAL_WIDTH
-        HEIGHT_INC_RATIO = screen_height / ORIGINAL_HEIGHT
-        logging.debug("Width increase ratio = {}, Height increase ratio = {}".format(WIDTH_INC_RATIO, HEIGHT_INC_RATIO))
+        set_display_vals(screen_height, screen_width)
+        logging.debug("Width increase ratio = {}, Height increase ratio = {}".format(get_width_inc(), get_height_inc()))
 
-        BLOCKERS_POSITION = int(BLOCKERS_POSITION * HEIGHT_INC_RATIO)
-        ENEMY_DEFAULT_POSITION = int(ENEMY_DEFAULT_POSITION * HEIGHT_INC_RATIO)
-        ENEMY_MOVE_DOWN = int(ENEMY_MOVE_DOWN * HEIGHT_INC_RATIO)
+        BLOCKERS_POSITION = int(BLOCKERS_POSITION * get_height_inc())
+        ENEMY_DEFAULT_POSITION = int(ENEMY_DEFAULT_POSITION * get_height_inc())
+        ENEMY_MOVE_DOWN = int(ENEMY_MOVE_DOWN * get_height_inc())
 
         #---------- MAC ENG ADDITIONS END -------------#
 
@@ -454,12 +450,11 @@ class SpaceInvaders(object):
         self.shipAlive = True
 
     def make_blockers(self, number):
-        global WIDTH_INC_RATIO
         blockerGroup = sprite.Group()
         for row in range(4):
             for column in range(9):
                 blocker = Blocker(10, GREEN, row, column)
-                blocker.rect.x = int(50 * WIDTH_INC_RATIO) + (int(200 * WIDTH_INC_RATIO) * number) + (column * blocker.width)
+                blocker.rect.x = int(50 * get_width_inc()) + (int(200 * get_width_inc()) * number) + (column * blocker.width)
                 blocker.rect.y = BLOCKERS_POSITION + (row * blocker.height)
                 blockerGroup.add(blocker)
         return blockerGroup
@@ -523,19 +518,17 @@ class SpaceInvaders(object):
                             self.sounds['shoot2'].play()
 
     def make_enemies(self):
-        global WIDTH_INC_RATIO, HEIGHT_INC_RATIO
         enemies = EnemiesGroup(10, 5)
         for row in range(5):
             for column in range(10):
                 enemy = Enemy(row, column)
-                enemy.rect.x = int(157 * WIDTH_INC_RATIO) + (column * int(50 * WIDTH_INC_RATIO))
-                enemy.rect.y = self.enemyPosition + (row * int(45 * HEIGHT_INC_RATIO))
+                enemy.rect.x = int(157 * get_width_inc()) + (column * int(50 * get_width_inc()))
+                enemy.rect.y = self.enemyPosition + (row * int(45 * get_height_inc()))
                 enemies.add(enemy)
 
         self.enemies = enemies
 
     def make_enemies_shoot(self):
-        global WIDTH_INC_RATIO, HEIGHT_INC_RATIO
         if (time.get_ticks() - self.timer) > 700 and self.enemies:
             enemy = self.enemies.random_bottom()
             self.enemyBullets.add(
@@ -558,7 +551,6 @@ class SpaceInvaders(object):
         return score
 
     def create_main_menu(self):
-        global HEIGHT_INC_RATIO, WIDTH_INC_RATIO
         self.enemy1 = IMAGES['enemy3_1']
         self.enemy1 = transform.scale(self.enemy1, (40, 40))
         self.enemy1 = _scale_img(self.enemy1)
@@ -571,10 +563,10 @@ class SpaceInvaders(object):
         self.enemy4 = IMAGES['mystery']
         self.enemy4 = transform.scale(self.enemy4, (80, 40))
         self.enemy4 = _scale_img(self.enemy4)
-        self.screen.blit(self.enemy1, (int(318 * WIDTH_INC_RATIO), int(270 * HEIGHT_INC_RATIO)))
-        self.screen.blit(self.enemy2, (int(318 * WIDTH_INC_RATIO), int(320 * HEIGHT_INC_RATIO)))
-        self.screen.blit(self.enemy3, (int(318 * WIDTH_INC_RATIO), int(370 * HEIGHT_INC_RATIO)))
-        self.screen.blit(self.enemy4, (int(299 * WIDTH_INC_RATIO), int(420 * HEIGHT_INC_RATIO)))
+        self.screen.blit(self.enemy1, (int(318 * get_width_inc()), int(270 * get_height_inc())))
+        self.screen.blit(self.enemy2, (int(318 * get_width_inc()), int(320 * get_height_inc())))
+        self.screen.blit(self.enemy3, (int(318 * get_width_inc()), int(370 * get_height_inc())))
+        self.screen.blit(self.enemy4, (int(299 * get_width_inc()), int(420 * get_height_inc())))
 
     def check_collisions(self):
         sprite.groupcollide(self.bullets, self.enemyBullets, True, True)
