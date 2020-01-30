@@ -7,3 +7,6 @@ share
 include/
 *.pyc
 *.sqlite3
+build/
+dist/
+*.spec
