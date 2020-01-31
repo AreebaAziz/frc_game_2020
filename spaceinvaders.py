@@ -13,6 +13,7 @@ from maceng import receiver as maceng_receiver
 from maceng.leaderboard import Leaderboard
 from maceng.form_screen import FormScreensController
 from maceng.constants import *
+from maceng.joystick_interface import JoystickInterface
 
 # SCREEN = display.set_mode((800, 600))
 SCREEN = display.set_mode((0, 0), FULLSCREEN)
@@ -425,6 +426,14 @@ class SpaceInvaders(object):
         # enter username
         self.formActive = False 
         self.formScreens = FormScreensController(self.screen, self.background)
+
+        # joystick interface
+        self.joystick_interface = JoystickInterface(mapping={
+            K_SPACE: 'joystick.get_button(0) == 1',
+            K_RIGHT: 'joystick.get_axis(0) == -1',
+            K_LEFT: 'joystick.get_axis(0) == 1',
+        })
+        self.joystick_interface.init()
 
         #---------- MAC ENG ADDITIONS END -------------#
 
