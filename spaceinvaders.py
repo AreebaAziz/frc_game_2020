@@ -532,7 +532,7 @@ class SpaceInvaders(object):
         if (time.get_ticks() - self.timer) > 700 and self.enemies:
             enemy = self.enemies.random_bottom()
             self.enemyBullets.add(
-                Bullet(enemy.rect.x + 14, enemy.rect.y + 20, 1, 5,
+                Bullet(enemy.rect.x + int(18 * get_width_inc()), enemy.rect.y + int(25 * get_height_inc()), 1, 5,
                        'enemylaser', 'center'))
             self.allSprites.add(self.enemyBullets)
             self.timer = time.get_ticks()
