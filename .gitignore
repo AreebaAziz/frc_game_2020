@@ -10,3 +10,4 @@ include/
 build/
 dist/
 *.spec
+*__pycache__*
