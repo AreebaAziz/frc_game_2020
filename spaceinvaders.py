@@ -590,6 +590,7 @@ class SpaceInvaders(object):
 
         for player in sprite.groupcollide(self.playerGroup, self.enemyBullets,
                                           True, True).keys():
+            logging.debug("Collision with player.")
             if self.life3.alive():
                 self.life3.kill()
             ######  COMMENT THIS FOR 1 LIFE DURING DEBUGGING #######
@@ -605,11 +606,13 @@ class SpaceInvaders(object):
             self.shipTimer = time.get_ticks()
             self.shipAlive = False
 
-        if self.enemies.bottom >= 540:
+        if self.enemies.bottom >= int(540 * get_height_inc()):
             sprite.groupcollide(self.enemies, self.playerGroup, True, True)
-            if not self.player.alive() or self.enemies.bottom >= 600:
+            player_alive = self.player.alive()
+            if not player_alive or self.enemies.bottom >= int(600 * get_height_inc()):
                 self.gameOver = True
                 self.startGame = False
+            logging.debug("self.gameover = {}".format(self.gameOver))
 
         sprite.groupcollide(self.bullets, self.allBlockers, True, True)
         sprite.groupcollide(self.enemyBullets, self.allBlockers, True, True)
