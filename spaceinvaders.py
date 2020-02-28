@@ -45,9 +45,9 @@ class Ship(sprite.Sprite):
         self.speed = int(5 * get_width_inc())
 
     def update(self, keys, *args):
-        if keys[K_LEFT] and self.rect.x > int(10 * get_width_inc()):
+        if (keys[K_LEFT] or joystick_interface.is_key_pressed(K_LEFT)) and self.rect.x > int(10 * get_width_inc()):
             self.rect.x -= self.speed
-        if keys[K_RIGHT] and self.rect.x < int(740 * get_width_inc()):
+        if (keys[K_RIGHT] or joystick_interface.is_key_pressed(K_RIGHT)) and self.rect.x < int(740 * get_width_inc()):
             self.rect.x += self.speed
         game.screen.blit(self.image, self.rect)
 
@@ -365,7 +365,7 @@ def get_width_inc():
 
 class SpaceInvaders(object):
     def __init__(self):
-        global BLOCKERS_POSITION, ENEMY_DEFAULT_POSITION, ENEMY_MOVE_DOWN
+        global BLOCKERS_POSITION, ENEMY_DEFAULT_POSITION, ENEMY_MOVE_DOWN, joystick_interface
         # It seems, in Linux buffersize=512 is not enough, use 4096 to prevent:
         #   ALSA lib pcm.c:7963:(snd_pcm_recover) underrun occurred
         mixer.pre_init(44100, -16, 1, 4096)
@@ -428,12 +428,12 @@ class SpaceInvaders(object):
         self.formScreens = FormScreensController(self.screen, self.background)
 
         # joystick interface
-        self.joystick_interface = JoystickInterface(mapping={
-            K_SPACE: 'joystick.get_button(0) == 1',
-            K_RIGHT: 'joystick.get_axis(0) == -1',
-            K_LEFT: 'joystick.get_axis(0) == 1',
+        joystick_interface = JoystickInterface(mapping={
+            K_SPACE: 'joystick.get_button(1) == 1',
+            K_RIGHT: 'joystick.get_axis(1) == -1',
+            K_LEFT: 'joystick.get_axis(1) == 1',
         })
-        self.joystick_interface.init()
+        joystick_interface.init()
 
         #---------- MAC ENG ADDITIONS END -------------#
 
@@ -504,8 +504,8 @@ class SpaceInvaders(object):
         for e in event.get():
             if self.should_exit(e):
                 sys.exit()
-            if e.type == KEYDOWN:
-                if e.key == K_SPACE:
+            if e.type == KEYDOWN or e.type == JOYBUTTONDOWN:
+                if e.key == K_SPACE or joystick_interface.is_key_pressed(K_SPACE):
                     if len(self.bullets) == 0 and self.shipAlive:
                         if self.score < 1000:
                             bullet = Bullet(self.player.rect.x + 23,
@@ -679,7 +679,7 @@ class SpaceInvaders(object):
                 for e in event.get():
                     if self.should_exit(e):
                         sys.exit()
-                    if e.type == KEYDOWN:
+                    if e.type == KEYDOWN or e.type == JOYBUTTONDOWN:
                         # Only create blockers on a new game, not a new round
                         self.allBlockers = sprite.Group(self.make_blockers(0),
                                                         self.make_blockers(1),
@@ -771,8 +771,12 @@ class SpaceInvaders(object):
                 for e in event.get():
                     if self.should_exit(e):
                         sys.exit()
-                    if e.type == KEYDOWN:
-                        change_to_mainscreen = self.leaderboard.update(e.key)
+                    if e.type == KEYDOWN or e.type == JOYBUTTONDOWN:
+                        if e.type == JOYBUTTONDOWN:
+                            equiv_key = joystick_interface.get_equiv_key()
+                        else:
+                            equiv_key = e.key 
+                        change_to_mainscreen = self.leaderboard.update(equiv_key)
                         if change_to_mainscreen:
                             self.mainScreen = True 
                             self.leaderboardScreen = False 
@@ -785,4 +789,5 @@ class SpaceInvaders(object):
 
 if __name__ == '__main__':
     game = SpaceInvaders()
+    joystick_interface = JoystickInterface()
     game.main()
