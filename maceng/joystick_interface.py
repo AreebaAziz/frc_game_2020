@@ -12,8 +12,9 @@ class JoystickInterface:
 			K_LEFT: 'joystick.get_axis(0) == 1',
 		}
 	'''
-	def __init__(self, mapping:dict):
+	def __init__(self, mapping:dict=None):
 		self.mapping = mapping
+		self.joystick = None 
 
 	def init(self):
 		# assumes up to 1 joystick set may be connected
@@ -40,5 +41,9 @@ class JoystickInterface:
 	def get_equiv_key(self):
 		if self.joystick is None: return None 
 		for k, c in self.mapping.items():
-			if exec("self." + c):
+			if eval("self." + c):
 				return k 
+
+	def is_key_pressed(self, key):
+		if self.joystick is None: return None
+		return eval("self." + self.mapping[key])
