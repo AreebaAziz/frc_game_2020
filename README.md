@@ -7,23 +7,12 @@
 git clone https://github.com/AreebaAziz/frc_game_2020.git frc_game_2020
 cd frc_game_2020
 python3 -m venv .
-. setupenv 
+. bin/activate 
 pip install -r requirements
 python manage.py migrate
 
 # run:
-cd frc_game_2020
-. setupenv
 python spaceinvaders.py
-
-# contribute:
-git checkout master
-git pull
-git checkout -b YOUR_BRANCH_NAME
-#### make code changes now ####
-git add -A
-git commit -m "commit msg"
-git push
 ```
 
 ## About
