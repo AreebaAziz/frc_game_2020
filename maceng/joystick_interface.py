@@ -41,10 +41,10 @@ class JoystickInterface:
 	def get_equiv_key(self):
 		if self.joystick is None: return None 
 		for k, c in self.mapping.items():
-			if eval("self." + c):
+			if eval(c):
 				return k 
 
 	def is_key_pressed(self, key):
 		if self.joystick is None: 
 			return None
-		return eval("self." + self.mapping[key])
+		return eval(self.mapping[key])
