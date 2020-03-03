@@ -14,6 +14,6 @@ YELLOW = (241, 255, 0)
 BLUE = (80, 255, 239)
 PURPLE = (203, 0, 255)
 RED = (237, 28, 36)
-
+FIREBALL = (248,180,5)
 # Other
 FONT = FONT_PATH + 'space_invaders.ttf'
