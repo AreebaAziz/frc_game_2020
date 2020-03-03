@@ -14,8 +14,8 @@ from maceng.leaderboard import Leaderboard
 from maceng.form_screen import FormScreensController
 from maceng.constants import *
 
-SCREEN = display.set_mode((1280, 1024))
-# SCREEN = display.set_mode((0, 0), FULLSCREEN)
+#SCREEN = display.set_mode((1280, 1024))
+SCREEN = display.set_mode((0, 0), FULLSCREEN)
 ORIGINAL_WIDTH, ORIGINAL_HEIGHT = 800, 600
 
 IMG_NAMES = ['ship', 'mystery',
@@ -773,7 +773,7 @@ class SpaceInvaders(object):
 
             #---------- MAC ENG ADDITIONS END -----------#
             display.update()
-            self.clock.tick(60)
+            self.clock.tick(45)
 
 
 if __name__ == '__main__':
