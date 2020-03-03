@@ -45,6 +45,7 @@ class Ship(sprite.Sprite):
         self.speed = int(5 * get_width_inc())
 
     def update(self, keys, *args):
+        global joystick_interface
         if (keys[K_LEFT] or joystick_interface.is_key_pressed(K_LEFT)) and self.rect.x > int(10 * get_width_inc()):
             self.rect.x -= self.speed
         if (keys[K_RIGHT] or joystick_interface.is_key_pressed(K_RIGHT)) and self.rect.x < int(740 * get_width_inc()):
@@ -430,9 +431,9 @@ class SpaceInvaders(object):
 
         # joystick interface
         joystick_interface = JoystickInterface(mapping={
-            K_SPACE: 'joystick.get_button(1) == 1',
-            K_RIGHT: 'joystick.get_axis(1) == -1',
-            K_LEFT: 'joystick.get_axis(1) == 1',
+            K_SPACE: 'joystick.get_button(2) == 1',
+            K_RIGHT: 'joystick.get_axis(1) == 1',
+            K_LEFT: 'joystick.get_axis(1) == -1',
         })
         joystick_interface.init()
 
@@ -501,12 +502,13 @@ class SpaceInvaders(object):
         return evt.type == QUIT or (evt.type == KEYUP and evt.key == K_ESCAPE)
 
     def check_input(self):
+        global joystick_interface
         self.keys = key.get_pressed()
         for e in event.get():
             if self.should_exit(e):
                 sys.exit()
             if e.type == KEYDOWN or e.type == JOYBUTTONDOWN:
-                if e.key == K_SPACE or joystick_interface.is_key_pressed(K_SPACE):
+                if (hasattr(e, "key") and e.key == K_SPACE) or joystick_interface.is_key_pressed(K_SPACE):
                     if len(self.bullets) == 0 and self.shipAlive:
                         if self.score < 1000:
                             bullet = Bullet(self.player.rect.x + 23,
@@ -791,5 +793,4 @@ class SpaceInvaders(object):
 
 if __name__ == '__main__':
     game = SpaceInvaders()
-    joystick_interface = JoystickInterface()
     game.main()

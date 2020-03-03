@@ -14,7 +14,9 @@ class JoystickInterface:
 	'''
 	def __init__(self, mapping:dict=None):
 		self.mapping = mapping
-		self.joystick = None 
+                self.joystick = None 
+                for k, v in self.mapping.items():
+                    self.mapping[k] = v.split("==")[0].strip() + "==round(" + v.split("==")[1].strip() + ")"
 
 	def init(self):
 		# assumes up to 1 joystick set may be connected
@@ -45,5 +47,8 @@ class JoystickInterface:
 				return k 
 
 	def is_key_pressed(self, key):
-		if self.joystick is None: return None
-		return eval("self." + self.mapping[key])
+                logging.debug("Checking if key {} was pressed.".format(key))
+                if self.joystick is None: 
+                    logging.debug("No joystick attached. Returning None")
+                    return None
+                return eval("self." + self.mapping[key])
