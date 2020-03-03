@@ -14,8 +14,8 @@ from maceng.leaderboard import Leaderboard
 from maceng.form_screen import FormScreensController
 from maceng.constants import *
 
-# SCREEN = display.set_mode((800, 600))
-SCREEN = display.set_mode((0, 0), FULLSCREEN)
+SCREEN = display.set_mode((1280, 1024))
+# SCREEN = display.set_mode((0, 0), FULLSCREEN)
 ORIGINAL_WIDTH, ORIGINAL_HEIGHT = 800, 600
 
 IMG_NAMES = ['ship', 'mystery',
@@ -386,7 +386,7 @@ class SpaceInvaders(object):
         #---------- MAC ENG ADDITIONS END -------------#
 
         self.clock = time.Clock()
-        self.caption = display.set_caption('Space Invaders')
+        self.caption = display.set_caption('The Last Defender')
         self.screen = SCREEN
         self.background = image.load(IMAGE_PATH + 'background.jpg').convert()
         self.background = transform.scale(self.background, (screen_width, screen_height))
@@ -395,7 +395,8 @@ class SpaceInvaders(object):
         self.gameOver = False
         # Counter for enemy starting position (increased each new round)
         self.enemyPosition = ENEMY_DEFAULT_POSITION
-        self.titleText = Text(FONT, 50, 'Space Invaders', WHITE, 164, 155)
+        self.titleText = Text(FONT, 50, 'The Last Defender', YELLOW, ORIGINAL_WIDTH*0.4, ORIGINAL_HEIGHT*0.4)
+        self.titleText3 = Text(FONT, 25, 'A Fireball Story', YELLOW, 400, 210)
         self.titleText2 = Text(FONT, 25, 'Press any key to continue', WHITE,
                                201, 225)
         self.gameOverText = Text(FONT, 50, 'Game Over', WHITE, 250, 270)
@@ -453,7 +454,7 @@ class SpaceInvaders(object):
         blockerGroup = sprite.Group()
         for row in range(4):
             for column in range(9):
-                blocker = Blocker(10, GREEN, row, column)
+                blocker = Blocker(10, FIREBALL, row, column)
                 blocker.rect.x = int(50 * get_width_inc()) + (int(200 * get_width_inc()) * number) + (column * blocker.width)
                 blocker.rect.y = BLOCKERS_POSITION + (row * blocker.height)
                 blockerGroup.add(blocker)
@@ -661,6 +662,7 @@ class SpaceInvaders(object):
             if self.mainScreen:
                 self.screen.blit(self.background, (0, 0))
                 self.titleText.draw(self.screen)
+                self.titleText3.draw(self.screen)
                 self.titleText2.draw(self.screen)
                 self.enemy1Text.draw(self.screen)
                 self.enemy2Text.draw(self.screen)
