@@ -431,9 +431,9 @@ class SpaceInvaders(object):
 
         # joystick interface
         joystick_interface = JoystickInterface(mapping={
-            K_SPACE: 'joystick.get_button(2) == 1',
-            K_RIGHT: 'joystick.get_axis(1) == 1',
-            K_LEFT: 'joystick.get_axis(1) == -1',
+            K_SPACE: 'round(joystick.get_button(2)) == 1',
+            K_RIGHT: 'round(joystick.get_axis(1)) == 1',
+            K_LEFT: 'round(joystick.get_axis(1)) == -1',
         })
         joystick_interface.init()
 

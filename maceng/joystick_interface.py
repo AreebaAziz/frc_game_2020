@@ -15,8 +15,6 @@ class JoystickInterface:
 	def __init__(self, mapping:dict=None):
 		self.mapping = mapping
 		self.joystick = None 
-		for k, v in self.mapping.items():
-			self.mapping[k] = v.split("==")[0].strip() + "==round(" + v.split("==")[1].strip() + ")"
 
 	def init(self):
 		# assumes up to 1 joystick set may be connected
