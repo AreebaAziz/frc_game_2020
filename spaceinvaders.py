@@ -397,10 +397,10 @@ class SpaceInvaders(object):
         self.gameOver = False
         # Counter for enemy starting position (increased each new round)
         self.enemyPosition = ENEMY_DEFAULT_POSITION
-        self.titleText = Text(FONT, 50, 'The Last Defender', YELLOW, ORIGINAL_WIDTH*0.4, ORIGINAL_HEIGHT*0.4)
-        self.titleText3 = Text(FONT, 25, 'A Fireball Story', YELLOW, 400, 210)
+        self.titleText = Text(FONT, 50, 'The Last Defender', YELLOW, ORIGINAL_WIDTH*0.15, ORIGINAL_HEIGHT*0.15)
+        self.titleText3 = Text(FONT, 25, 'A Fireball Story', YELLOW, ORIGINAL_WIDTH*0.55, ORIGINAL_HEIGHT*0.25)
         self.titleText2 = Text(FONT, 25, 'Press any key to continue', WHITE,
-                               201, 225)
+                               ORIGINAL_WIDTH*0.25, ORIGINAL_HEIGHT*0.35)
         self.gameOverText = Text(FONT, 50, 'Game Over', WHITE, 250, 270)
         self.nextRoundText = Text(FONT, 50, 'Next Round', WHITE, 240, 270)
         self.enemy1Text = Text(FONT, 25, '   =   10 pts', GREEN, 368, 270)
@@ -788,7 +788,7 @@ class SpaceInvaders(object):
 
             #---------- MAC ENG ADDITIONS END -----------#
             display.update()
-            self.clock.tick(45)
+            self.clock.tick(60)
 
 
 if __name__ == '__main__':
