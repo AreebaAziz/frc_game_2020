@@ -15,9 +15,9 @@ from maceng.form_screen import FormScreensController
 from maceng.constants import *
 from maceng.joystick_interface import JoystickInterface
 
-#SCREEN = display.set_mode((1280, 1024))
-SCREEN = display.set_mode((0, 0), FULLSCREEN)
-ORIGINAL_WIDTH, ORIGINAL_HEIGHT = 800, 600
+SCREEN = display.set_mode((800,640), FULLSCREEN)
+#SCREEN = display.set_mode((0, 0), FULLSCREEN)
+ORIGINAL_WIDTH, ORIGINAL_HEIGHT = 800, 640
 
 IMG_NAMES = ['ship', 'mystery',
              'enemy1_1', 'enemy1_2',
@@ -46,9 +46,9 @@ class Ship(sprite.Sprite):
 
     def update(self, keys, *args):
         global joystick_interface
-        if (keys[K_LEFT] or joystick_interface.is_key_pressed(K_LEFT)) and self.rect.x > int(10 * get_width_inc()):
+        if joystick_interface.is_key_pressed(K_LEFT) and self.rect.x > int(10 * get_width_inc()):
             self.rect.x -= self.speed
-        if (keys[K_RIGHT] or joystick_interface.is_key_pressed(K_RIGHT)) and self.rect.x < int(740 * get_width_inc()):
+        if joystick_interface.is_key_pressed(K_RIGHT) and self.rect.x < int(740 * get_width_inc()):
             self.rect.x += self.speed
         game.screen.blit(self.image, self.rect)
 
@@ -194,7 +194,7 @@ class EnemiesGroup(sprite.Group):
             while self._leftAliveColumn < self.columns and is_column_dead:
                 self._leftAliveColumn += 1
                 self.leftAddMove += 5
-                is_column_dead = self.is_column_dead(self._leftAliveColumn)
+                is_column_dead = self.is_column_dead(self._leftAliveColumnself.make_enemies_shoot)
 
 
 class Blocker(sprite.Sprite):
@@ -499,7 +499,7 @@ class SpaceInvaders(object):
     @staticmethod
     def should_exit(evt):
         # type: (pygame.event.EventType) -> bool
-        return evt.type == QUIT or (evt.type == KEYUP and evt.key == K_ESCAPE)
+        return (evt.type == KEYUP and evt.key == K_KP_DIVIDE)
 
     def check_input(self):
         global joystick_interface
@@ -507,21 +507,21 @@ class SpaceInvaders(object):
         for e in event.get():
             if self.should_exit(e):
                 sys.exit()
-            if e.type == KEYDOWN or e.type == JOYBUTTONDOWN:
-                if (hasattr(e, "key") and e.key == K_SPACE) or joystick_interface.is_key_pressed(K_SPACE):
+            if e.type == JOYBUTTONDOWN:
+                if joystick_interface.is_key_pressed(K_SPACE):
                     if len(self.bullets) == 0 and self.shipAlive:
                         if self.score < 1000:
-                            bullet = Bullet(self.player.rect.x + 23,
+                            bullet = Bullet(self.player.rect.x + 15,
                                             self.player.rect.y + 5, -1,
                                             15, 'laser', 'center')
                             self.bullets.add(bullet)
                             self.allSprites.add(self.bullets)
                             self.sounds['shoot'].play()
                         else:
-                            leftbullet = Bullet(self.player.rect.x + 8,
+                            leftbullet = Bullet(self.player.rect.x + 5,
                                                 self.player.rect.y + 5, -1,
                                                 15, 'laser', 'left')
-                            rightbullet = Bullet(self.player.rect.x + 38,
+                            rightbullet = Bullet(self.player.rect.x + 25,
                                                  self.player.rect.y + 5, -1,
                                                  15, 'laser', 'right')
                             self.bullets.add(leftbullet)
@@ -583,8 +583,7 @@ class SpaceInvaders(object):
     def check_collisions(self):
         sprite.groupcollide(self.bullets, self.enemyBullets, True, True)
 
-        for enemy in sprite.groupcollide(self.enemies, self.bullets,
-                                         True, True).keys():
+        for enemy in sprite.groupcollide(self.enemies, self.bullets, True, True).keys():
             self.sounds['invaderkilled'].play()
             self.calculate_score(enemy.row)
             EnemyExplosion(enemy, self.explosionsGroup)
@@ -669,6 +668,7 @@ class SpaceInvaders(object):
                 sys.exit()
 
     def main(self):
+        global joystick_interface
         while True:
             if self.mainScreen:
                 self.screen.blit(self.background, (0, 0))
@@ -775,9 +775,10 @@ class SpaceInvaders(object):
                 for e in event.get():
                     if self.should_exit(e):
                         sys.exit()
-                    if e.type == KEYDOWN or e.type == JOYBUTTONDOWN:
-                        if e.type == JOYBUTTONDOWN:
+                    if e.type == KEYDOWN or e.type == JOYBUTTONUP:
+                        if e.type == JOYBUTTONUP:
                             equiv_key = joystick_interface.get_equiv_key()
+                            logging.debug("Equiv key = {}".format(equiv_key))
                         else:
                             equiv_key = e.key 
                         change_to_mainscreen = self.leaderboard.update(equiv_key)

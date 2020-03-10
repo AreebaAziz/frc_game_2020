@@ -201,6 +201,7 @@ class Leaderboard(object):
 			BUTTONS[original_index].active = False		
 
 	def update(self, key_press):
+		logging.debug("Key pressed: {}".format(key_press))
 		if (key_press == K_RIGHT):
 			logging.debug("right key pressed")
 			self._inc_active_btn()

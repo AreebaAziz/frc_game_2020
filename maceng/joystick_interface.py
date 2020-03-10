@@ -39,9 +39,13 @@ class JoystickInterface:
 		the functional equivalent. Eg. joystick axis 0 value of 1.00 will be returned as K_RIGHT. 
 	'''
 	def get_equiv_key(self):
+		logging.debug("JOYSTICK self.joystick = {}".format(self.joystick))
 		if self.joystick is None: return None 
 		for k, c in self.mapping.items():
-			if eval(c):
+			logging.debug("JOYSTICK evaluating key {}: {}".format(k, c))
+			res = eval(c)
+			logging.debug("Result: {}".format(res))
+			if res:
 				return k 
 
 	def is_key_pressed(self, key):
