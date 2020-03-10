@@ -126,7 +126,7 @@ class Leaderboard(object):
 		alltime_scores = Score.get_alltime_scores()
 		logging.debug("All-time scores: \n{}".format(alltime_scores))
 
-		alltime_table = [["Rank", "Username", "Team", "Score"]]
+		alltime_table = [["Rank", "Username", "Team Number", "Score"]]
 		rank = 1
 		for score in alltime_scores:
 			team = str(score.user.team) if score.user.team else "-"
@@ -143,7 +143,7 @@ class Leaderboard(object):
 		today_scores = Score.get_today_scores()
 		logging.debug("Today scores: \n{}".format(today_scores))
 
-		today_table = [["Rank", "Username", "Team", "Score"]]
+		today_table = [["Rank", "Username", "Team Number", "Score"]]
 
 		rank = 1
 		for score in today_scores:

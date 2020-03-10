@@ -7,5 +7,5 @@ def gameover(form_data):
 		username=form_data["username"], 
 		score=form_data["score"],
 		email=form_data["email"],
-		team=int(form_data["team"])
+		team=int(form_data["team number"])
 		)
