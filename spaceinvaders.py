@@ -743,8 +743,8 @@ class Score:
     def __str__(self):
         return "{score} [{username}]".format(score=self.score, username=self.user.username)
 
-    @classmethod
-    def get_top_scores(cls):
+    @staticmethod
+    def get_top_scores():
         # return list of top scores from text file
         # return [Score(100, 'areeba'), Score(0, 'maanav'), Score(33, 'lafod')]
         try:
@@ -757,15 +757,45 @@ class Score:
         raw_scores = file.readlines()
         scores = []
         for s in raw_scores:
-            ss = s.strip().split(" ")
-            scores.append(Score(ss[1], ss[0]))
+            if s.strip() != "":
+                ss = s.strip().split(" ")
+                scores.append(Score(int(ss[1]), ss[0]))
 
         return scores
 
-    @classmethod
-    def add_score(cls, username, score):
-        # TODO: add this new score to the csv file
-        pass 
+    @staticmethod
+    def add_score(username, score):
+        # add this new score to the text file
+        # first get the current list of scores
+        scores = Score.get_top_scores()
+
+        # add new score to this list
+        scores.append(Score(score, username))
+
+        # sort with the new item
+        scores = sorted(scores, key=lambda x: x.score, reverse=True)
+
+        # only take the top 15
+        scores = scores[:15]
+
+        # write the new scores back to the text file
+        try:
+            file = open("scores", "w")
+        except Exception:
+            logging.error("cannot write scores to file.")
+        else:
+            s = ""
+            for scr in scores:
+                s += scr.user.username + " " + str(scr.score) + "\n"
+            file.write(s)
+            file.close()
+
+    def __str__(self):
+        return "{} {}".format(self.user.username, self.score)
+
+    def __repr__(self):
+        return self.__str__()
+
 
 ###################### SPACEINVADERS ##############################
 class SpaceInvaders(object):
@@ -1146,5 +1176,5 @@ class SpaceInvaders(object):
 
 if __name__ == '__main__':
     game = SpaceInvaders()
-    logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', level=logging.DEBUG)
     game.main()
