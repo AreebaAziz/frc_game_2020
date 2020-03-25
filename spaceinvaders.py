@@ -9,10 +9,28 @@ import sys
 from os.path import abspath, dirname
 from os import environ
 from random import choice
-from maceng import receiver as maceng_receiver
-from maceng.leaderboard import Leaderboard
-from maceng.form_screen import FormScreensController
-from maceng.constants import *
+
+### ****************************************************** ####
+### ********************* constants.py ******************* ####
+### ****************************************************** ####
+
+# Paths
+BASE_PATH = abspath(dirname(__file__))
+FONT_PATH = BASE_PATH + '/fonts/'
+IMAGE_PATH = BASE_PATH + '/images/'
+SOUND_PATH = BASE_PATH + '/sounds/'
+
+# Colors (R, G, B)
+WHITE = (255, 255, 255)
+GRAY = (102, 102, 102)
+GREEN = (78, 255, 87)
+YELLOW = (241, 255, 0)
+BLUE = (80, 255, 239)
+PURPLE = (203, 0, 255)
+RED = (237, 28, 36)
+
+# Other
+FONT = FONT_PATH + 'space_invaders.ttf'
 
 SCREEN = display.set_mode((800, 600))
 # SCREEN = display.set_mode((0, 0), FULLSCREEN)
@@ -30,6 +48,10 @@ IMAGES = {name: image.load(IMAGE_PATH + '{}.png'.format(name)).convert_alpha()
 BLOCKERS_POSITION = 450
 ENEMY_DEFAULT_POSITION = 65  # Initial value for a new game
 ENEMY_MOVE_DOWN = 35
+
+### ****************************************************** ####
+### ********************* spaceinvaders.py *************** ####
+### ****************************************************** ####
 
 def _scale_img(img):
     ix, iy = img.get_size()
@@ -352,6 +374,386 @@ def get_height_inc():
 def get_width_inc():
     return int(environ['DISPLAY_WIDTH']) / ORIGINAL_WIDTH
 
+
+### ****************************************************** ####
+### *************** maceng.receiver.py ******************* ####
+### ****************************************************** ####
+
+class Receiver:
+    @staticmethod
+    def gameover(form_data):
+        logging.debug("Gameover signal received. Form data: \n{}".format(form_data))
+        Score.add_score(
+            username=form_data["username"], 
+            score=form_data["score"],
+            )
+
+### ****************************************************** ####
+### ******************* form_screen.py ******************* ####
+### ****************************************************** ####
+
+class EnterTextInput:
+    text = ""
+    active = False 
+
+    def __init__(self, label, screen, background, ypos):
+        self.label = label
+        self.screen = screen
+        self.background = background
+        self.ypos = ypos
+
+    def create(self):
+        logging.debug("Creating input {}".format(self.label))
+
+        self.label_text = Text(
+            textFont=FONT, 
+            size=40, 
+            color=GREEN,
+            message="ENTER " + self.label + ":", 
+            xpos=170, 
+            ypos=self.ypos
+        )
+        self.label_text.draw(self.screen)
+
+        self.input_text = TextVariableMsg(
+            textFont=FONT, 
+            size=40, 
+            color=YELLOW,
+            xpos=170, 
+            ypos=self.ypos + 50
+        )
+        self.input_text.create(self._cursor).draw(self.screen)
+
+    @property
+    def _cursor(self):
+        return "|" if self.active else ""
+    
+    def draw(self):
+        self.label_text.draw(self.screen)
+        self.input_text.create(self.text + self._cursor).draw(self.screen)
+
+    def update(self, key):
+        logging.debug("Key pressed: {}".format(key))
+
+        if ((key >= K_a and key <= K_z) 
+            or (key >= K_0 and key <= K_9)):
+            self.text += chr(key)
+            self.draw()
+        elif (key == K_BACKSPACE):
+            self.text = self.text[:-1]
+            self.draw()
+        elif (key == K_RETURN):
+            if self.text != "":
+                self.active = False 
+                return self.text, True 
+        
+        return self.text, False 
+
+    def reset(self):
+        self.text = ""
+
+FORM_LABELS = [
+    "username",
+]
+
+class FormScreensController:
+
+    def __init__(self, screen, background):
+        self.screen = screen
+        self.background = background
+
+        self.forms = {}
+        ypos = 50
+        for l in FORM_LABELS:
+            self.forms[l] = EnterTextInput(l, screen, background, ypos)
+            ypos += 120
+
+        self.form_data = {}.fromkeys(self.forms.keys(), "")
+        self.current_form = self.forms[FORM_LABELS[0]]
+        self.current_form.active = True 
+
+        self.created = False 
+
+    def create(self):
+        if not self.created:
+            self.screen.blit(self.background, (0, 0))
+            for label, form in self.forms.items():
+                form.create()
+            self.created = True
+
+    def draw(self):
+        self.screen.blit(self.background, (0, 0))
+        for label, form in self.forms.items():
+            form.draw()
+
+    def update(self, key):
+        text, done = self.current_form.update(key) 
+
+        if done:
+            self.form_data[self.current_form.label] = text
+
+            # go to the next form if there is a next form
+            i = FORM_LABELS.index(self.current_form.label)
+            if (i < len(FORM_LABELS)-1):
+                self.current_form = self.forms[FORM_LABELS[i+1]]
+                self.current_form.active = True 
+                self.draw()
+            else:
+                return self.form_data, True 
+        else:
+            self.draw()
+
+        return self.form_data, False 
+
+    def reset(self):
+        for k, v in self.forms.items():
+            v.reset()
+        self.current_form = self.forms[FORM_LABELS[0]]
+        self.form_data = {}.fromkeys(self.forms.keys(), "")
+        self.created = False 
+
+### ****************************************************** ####
+### ******************* leaderboard.py ******************* ####
+### ****************************************************** ####
+
+# constants
+BTN_LABEL_SIZE = 25
+BTN_COLOR_IDLE = WHITE
+BTN_COLOR_ACTIVE = YELLOW
+BTN_COLOR_DISABLED = GRAY
+TABLE_TXT_SIZE = 20
+TABLE_HDR_COLOR = PURPLE
+TABLE_TXT_COLOR = BLUE
+
+class Button(object):
+
+    def __init__(self, label, xpos, ypos, active=False, disabled=False):
+        self.label = label
+        self.active = active
+        self.disabled = disabled
+        self.xpos = xpos
+        self.ypos = ypos
+
+    def initialize(self):
+        self.text = TextVariableColor(
+            textFont=FONT, 
+            size=BTN_LABEL_SIZE, 
+            message=self.label, 
+            xpos=self.xpos, 
+            ypos=self.ypos
+        )       
+
+class Page(object):
+
+    def __init__(self, title, subtitle=None, active=False):
+        self.title = title
+        self.subtitle = subtitle
+        self.active = active
+        self.table = None
+
+    def initialize(self):
+        self.title_text = Text(
+            textFont=FONT, 
+            size=50, 
+            color=GREEN,
+            message=self.title, 
+            xpos=170, 
+            ypos=7
+        )
+        if self.subtitle:
+            self.subtitle_text = Text(
+                textFont=FONT, 
+                size=23, 
+                color=WHITE,
+                message=self.subtitle, 
+                xpos=280, 
+                ypos=60
+            )
+
+    def create_title_texts(self, screen):
+        self.title_text.draw(screen)
+        if self.subtitle:
+            self.subtitle_text.draw(screen) 
+
+    def create_table(self, screen, data):
+        # creates a table given data.
+        # the data should be a list of rows for the table.
+        num_cols = len(data[0])
+        num_rows = len(data)
+        xstart = 50
+        xend = 800
+        ystart = 100
+        yend = 660
+
+        xinc = (xend - xstart) / num_cols
+        yinc = 24
+
+        # store all texts into a big array
+        self.table = []
+
+        # top row
+        for col in range(num_cols):
+            xpos = xstart + col * xinc
+            ypos = ystart
+            self.table.append(Text(
+                textFont=FONT, 
+                size=TABLE_TXT_SIZE, 
+                color=TABLE_HDR_COLOR,
+                message=data[0][col], 
+                xpos=xpos, 
+                ypos=ypos
+            ))
+
+        # all other rows
+        for row in range(1, num_rows):
+            for col in range(num_cols):
+                xpos = xstart + col * xinc
+                ypos = ystart + row * yinc
+                self.table.append(Text(
+                    textFont=FONT, 
+                    size=TABLE_TXT_SIZE, 
+                    color=TABLE_TXT_COLOR,
+                    message=data[row][col], 
+                    xpos=xpos, 
+                    ypos=ypos
+                ))  
+
+class Leaderboard(object):
+
+    def __init__(self, screen, background):
+        self.screen = screen 
+        self.background = background
+        self.active_index = 1
+
+    def initialize(self):
+        for p in PAGES:
+            p.initialize()
+        for b in BUTTONS:
+            b.initialize()
+
+        alltime_scores = Score.get_top_scores()
+        logging.debug("All-time scores: \n{}".format(alltime_scores))
+
+        alltime_table = [["Rank", "Username", "Score"]]
+        rank = 1
+        for score in alltime_scores:
+            alltime_table.append([
+                str(f'{rank:02}'), 
+                score.user.username, 
+                str(score.score)
+            ])
+            rank += 1
+
+        ALLTIME_PG.create_table(self.screen, alltime_table)
+
+
+    def create(self):
+        self.screen.blit(self.background, (0, 0))
+
+        # draw title text
+        PAGES[self.active_index].create_title_texts(self.screen)
+
+        # draw menu buttons
+        for b in BUTTONS:
+            if (b.active):
+                b.text.create(BTN_COLOR_ACTIVE).draw(self.screen)
+            elif (b.disabled):
+                b.text.create(BTN_COLOR_DISABLED).draw(self.screen)
+            else:
+                b.text.create(BTN_COLOR_IDLE).draw(self.screen)
+
+        # draw table if applicable 
+        if PAGES[self.active_index].table is not None:
+            for t in PAGES[self.active_index].table:
+                t.draw(self.screen)
+
+
+    def _inc_active_btn(self):
+        original_index = self.active_index
+        new_index = original_index + 1
+        while (new_index < len(BUTTONS) and BUTTONS[new_index].disabled):
+            new_index += 1
+        if (new_index < len(BUTTONS) and not BUTTONS[new_index].disabled):
+            self.active_index = new_index
+            BUTTONS[new_index].active = True 
+            BUTTONS[original_index].active = False
+
+    def _dec_active_btn(self):
+        original_index = self.active_index
+        new_index = original_index - 1
+        while (new_index >= 0 and BUTTONS[new_index].disabled):
+            new_index -= 1
+        if (new_index >= 0 and not BUTTONS[new_index].disabled):
+            self.active_index = new_index
+            BUTTONS[new_index].active = True 
+            BUTTONS[original_index].active = False      
+
+    def update(self, key_press):
+        if (key_press == K_RIGHT):
+            logging.debug("right key pressed")
+            self._inc_active_btn()
+        elif (key_press == K_LEFT):
+            logging.debug("left key pressed")
+            self._dec_active_btn()
+        elif (key_press == K_RETURN):
+            logging.debug("return key pressed on menu button \"{}\"".format(BUTTONS[self.active_index].label))
+            if (BUTTONS[self.active_index] == MAIN_MENU):
+                return True 
+        return False 
+
+BUTTONS = [
+    Button("Main menu", 100, 560),
+    Button("All-time",300, 560, active=True),
+    Button("Credits", 600, 560),
+]
+MAIN_MENU = BUTTONS[0]
+
+# pages 
+ALLTIME_PG = Page("Leaderboard", subtitle="All-time", active=True)
+
+PAGES = [
+    ALLTIME_PG,
+    ALLTIME_PG, 
+    Page("Credits"),
+]
+
+### ****************************************************** ####
+### ******************* models.py ************************ ####
+### ****************************************************** ####
+
+class User:
+
+    username = None
+
+    def __init__(self, username):
+        self.username = username
+
+    def __str__(self):
+        return self.username
+    
+class Score:
+
+    score = None
+    user = None
+
+    def __init__(self, score, username):
+        self.score = score
+        self.user = User(username)
+
+    def __str__(self):
+        return "{score} [{username}]".format(score=self.score, username=self.user.username)
+
+    @classmethod
+    def get_top_scores(cls):
+        # TODO: return list of top scores from csv file
+        return [Score(100, 'areeba'), Score(0, 'maanav'), Score(33, 'lafod')]
+
+    @classmethod
+    def add_score(cls, username, score):
+        # TODO: add this new score to the csv file
+        pass 
+
+###################### SPACEINVADERS ##############################
 class SpaceInvaders(object):
     def __init__(self):
         global BLOCKERS_POSITION, ENEMY_DEFAULT_POSITION, ENEMY_MOVE_DOWN
@@ -703,7 +1105,7 @@ class SpaceInvaders(object):
                         logging.debug("Form Data: \n{}".format(form_data))
                         if goto_leaderboard:
                             form_data["score"] = self.score
-                            maceng_receiver.gameover(form_data=form_data)
+                            Receiver.gameover(form_data=form_data)
                             self.formActive = False
                             self.leaderboardScreen = True 
                             self.formScreens.reset()
@@ -730,4 +1132,5 @@ class SpaceInvaders(object):
 
 if __name__ == '__main__':
     game = SpaceInvaders()
+    logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', level=logging.INFO)
     game.main()
