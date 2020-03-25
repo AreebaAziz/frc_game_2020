@@ -14,8 +14,8 @@ from maceng.leaderboard import Leaderboard
 from maceng.form_screen import FormScreensController
 from maceng.constants import *
 
-# SCREEN = display.set_mode((800, 600))
-SCREEN = display.set_mode((0, 0), FULLSCREEN)
+SCREEN = display.set_mode((800, 600))
+# SCREEN = display.set_mode((0, 0), FULLSCREEN)
 ORIGINAL_WIDTH, ORIGINAL_HEIGHT = 800, 600
 
 IMG_NAMES = ['ship', 'mystery',
