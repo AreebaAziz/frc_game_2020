@@ -704,7 +704,6 @@ class Leaderboard(object):
 BUTTONS = [
     Button("Main menu", 100, 560),
     Button("All-time",300, 560, active=True),
-    Button("Credits", 600, 560),
 ]
 MAIN_MENU = BUTTONS[0]
 
@@ -714,7 +713,6 @@ ALLTIME_PG = Page("Leaderboard", subtitle="All-time", active=True)
 PAGES = [
     ALLTIME_PG,
     ALLTIME_PG, 
-    Page("Credits"),
 ]
 
 ### ****************************************************** ####
