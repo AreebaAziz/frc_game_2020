@@ -386,7 +386,6 @@ class Receiver:
         Score.add_score(
             username=form_data["username"], 
             score=form_data["score"],
-            team=form_data["team number"]
             )
 
 ### ****************************************************** ####
@@ -455,7 +454,6 @@ class EnterTextInput:
 
 FORM_LABELS = [
     "username",
-    "team number"
 ]
 
 class FormScreensController:
@@ -636,13 +634,12 @@ class Leaderboard(object):
         alltime_scores = Score.get_top_scores()
         logging.debug("All-time scores: \n{}".format(alltime_scores))
 
-        alltime_table = [["Rank", "Username", "Team", "Score"]]
+        alltime_table = [["Rank", "Username", "Score"]]
         rank = 1
         for score in alltime_scores:
             alltime_table.append([
                 str(f'{rank:02}'), 
                 score.user.username, 
-                score.user.team,
                 str(score.score)
             ])
             rank += 1
@@ -727,11 +724,9 @@ PAGES = [
 class User:
 
     username = None
-    team = None
 
-    def __init__(self, username, team):
-        self.username = username[:10]
-        self.team = team
+    def __init__(self, username):
+        self.username = username
 
     def __str__(self):
         return self.username
@@ -741,9 +736,9 @@ class Score:
     score = None
     user = None
 
-    def __init__(self, score, username, team):
+    def __init__(self, score, username):
         self.score = score
-        self.user = User(username, team)
+        self.user = User(username)
 
     def __str__(self):
         return "{score} [{username}]".format(score=self.score, username=self.user.username)
@@ -764,18 +759,18 @@ class Score:
         for s in raw_scores:
             if s.strip() != "":
                 ss = s.strip().split(" ")
-                scores.append(Score(int(ss[1]), ss[0], ss[2]))
+                scores.append(Score(int(ss[1]), ss[0]))
 
         return scores
 
     @staticmethod
-    def add_score(username, score, team):
+    def add_score(username, score):
         # add this new score to the text file
         # first get the current list of scores
         scores = Score.get_top_scores()
 
         # add new score to this list
-        scores.append(Score(score, username, team))
+        scores.append(Score(score, username))
 
         # sort with the new item
         scores = sorted(scores, key=lambda x: x.score, reverse=True)
@@ -791,7 +786,7 @@ class Score:
         else:
             s = ""
             for scr in scores:
-                s += "{} {} {}\n".format(scr.user.username, scr.score, scr.user.team)
+                s += scr.user.username + " " + str(scr.score) + "\n"
             file.write(s)
             file.close()
 
