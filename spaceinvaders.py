@@ -745,8 +745,22 @@ class Score:
 
     @classmethod
     def get_top_scores(cls):
-        # TODO: return list of top scores from csv file
-        return [Score(100, 'areeba'), Score(0, 'maanav'), Score(33, 'lafod')]
+        # return list of top scores from text file
+        # return [Score(100, 'areeba'), Score(0, 'maanav'), Score(33, 'lafod')]
+        try:
+            file = open("scores", "r")
+        except:
+            f = open("scores", "w")
+            f.close()
+            return []
+
+        raw_scores = file.readlines()
+        scores = []
+        for s in raw_scores:
+            ss = s.strip().split(" ")
+            scores.append(Score(ss[1], ss[0]))
+
+        return scores
 
     @classmethod
     def add_score(cls, username, score):
