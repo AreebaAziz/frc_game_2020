@@ -3,22 +3,26 @@
 # Space Invaders
 # Created by Lee Robinson
 
-import logging
 from pygame import *
 import sys
 from os.path import abspath, dirname
-from os import environ
 from random import choice
-from maceng import receiver as maceng_receiver
-from maceng.leaderboard import Leaderboard
-from maceng.form_screen import FormScreensController
-from maceng.constants import *
-from maceng.joystick_interface import JoystickInterface
 
-SCREEN = display.set_mode((800,640), FULLSCREEN)
-#SCREEN = display.set_mode((0, 0), FULLSCREEN)
-ORIGINAL_WIDTH, ORIGINAL_HEIGHT = 800, 640
+BASE_PATH = abspath(dirname(__file__))
+FONT_PATH = BASE_PATH + '/fonts/'
+IMAGE_PATH = BASE_PATH + '/images/'
+SOUND_PATH = BASE_PATH + '/sounds/'
 
+# Colors (R, G, B)
+WHITE = (255, 255, 255)
+GREEN = (78, 255, 87)
+YELLOW = (241, 255, 0)
+BLUE = (80, 255, 239)
+PURPLE = (203, 0, 255)
+RED = (237, 28, 36)
+
+SCREEN = display.set_mode((800, 600))
+FONT = FONT_PATH + 'space_invaders.ttf'
 IMG_NAMES = ['ship', 'mystery',
              'enemy1_1', 'enemy1_2',
              'enemy2_1', 'enemy2_2',
@@ -32,23 +36,18 @@ BLOCKERS_POSITION = 450
 ENEMY_DEFAULT_POSITION = 65  # Initial value for a new game
 ENEMY_MOVE_DOWN = 35
 
-def _scale_img(img):
-    ix, iy = img.get_size()
-    nx, ny = int(ix * get_width_inc()), int(iy * get_height_inc())
-    return transform.scale(img, (nx, ny))
 
 class Ship(sprite.Sprite):
     def __init__(self):
         sprite.Sprite.__init__(self)
-        self.image = _scale_img(IMAGES['ship'])
-        self.rect = self.image.get_rect(topleft=(int(375 * get_width_inc()), int(540 * get_height_inc())))
-        self.speed = int(5 * get_width_inc())
+        self.image = IMAGES['ship']
+        self.rect = self.image.get_rect(topleft=(375, 540))
+        self.speed = 5
 
     def update(self, keys, *args):
-        global joystick_interface
-        if joystick_interface.is_key_pressed(K_LEFT) and self.rect.x > int(10 * get_width_inc()):
+        if keys[K_LEFT] and self.rect.x > 10:
             self.rect.x -= self.speed
-        if joystick_interface.is_key_pressed(K_RIGHT) and self.rect.x < int(740 * get_width_inc()):
+        if keys[K_RIGHT] and self.rect.x < 740:
             self.rect.x += self.speed
         game.screen.blit(self.image, self.rect)
 
@@ -56,7 +55,7 @@ class Ship(sprite.Sprite):
 class Bullet(sprite.Sprite):
     def __init__(self, xpos, ypos, direction, speed, filename, side):
         sprite.Sprite.__init__(self)
-        self.image = _scale_img(IMAGES[filename])
+        self.image = IMAGES[filename]
         self.rect = self.image.get_rect(topleft=(xpos, ypos))
         self.speed = speed
         self.direction = direction
@@ -66,7 +65,7 @@ class Bullet(sprite.Sprite):
     def update(self, keys, *args):
         game.screen.blit(self.image, self.rect)
         self.rect.y += self.speed * self.direction
-        if self.rect.y < int(15 * get_height_inc()) or self.rect.y > int(600 * get_height_inc()):
+        if self.rect.y < 15 or self.rect.y > 600:
             self.kill()
 
 
@@ -99,10 +98,8 @@ class Enemy(sprite.Sprite):
                   }
         img1, img2 = (IMAGES['enemy{}'.format(img_num)] for img_num in
                       images[self.row])
-
-        img1, img2 = transform.scale(img1, (40, 35)), transform.scale(img2, (40, 35))
-        self.images.append(_scale_img(img1))
-        self.images.append(_scale_img(img2))
+        self.images.append(transform.scale(img1, (40, 35)))
+        self.images.append(transform.scale(img2, (40, 35)))
 
 
 class EnemiesGroup(sprite.Group):
@@ -119,7 +116,7 @@ class EnemiesGroup(sprite.Group):
         self.leftMoves = 30
         self.moveNumber = 15
         self.timer = time.get_ticks()
-        self.bottom = int((game.enemyPosition + ((rows - 1) * 45) + 35) * get_height_inc())
+        self.bottom = game.enemyPosition + ((rows - 1) * 45) + 35
         self._aliveColumns = list(range(columns))
         self._leftAliveColumn = 0
         self._rightAliveColumn = columns - 1
@@ -194,14 +191,14 @@ class EnemiesGroup(sprite.Group):
             while self._leftAliveColumn < self.columns and is_column_dead:
                 self._leftAliveColumn += 1
                 self.leftAddMove += 5
-                is_column_dead = self.is_column_dead(self._leftAliveColumnself.make_enemies_shoot)
+                is_column_dead = self.is_column_dead(self._leftAliveColumn)
 
 
 class Blocker(sprite.Sprite):
     def __init__(self, size, color, row, column):
         sprite.Sprite.__init__(self)
-        self.height = size * get_height_inc()
-        self.width = size * get_width_inc()
+        self.height = size
+        self.width = size
         self.color = color
         self.image = Surface((self.width, self.height))
         self.image.fill(self.color)
@@ -260,7 +257,6 @@ class EnemyExplosion(sprite.Sprite):
         super(EnemyExplosion, self).__init__(*groups)
         self.image = transform.scale(self.get_image(enemy.row), (40, 35))
         self.image2 = transform.scale(self.get_image(enemy.row), (50, 45))
-        self.image, self.image2 = _scale_img(self.image), _scale_img(self.image2)
         self.rect = self.image.get_rect(topleft=(enemy.rect.x, enemy.rect.y))
         self.timer = time.get_ticks()
 
@@ -282,8 +278,8 @@ class EnemyExplosion(sprite.Sprite):
 class MysteryExplosion(sprite.Sprite):
     def __init__(self, mystery, score, *groups):
         super(MysteryExplosion, self).__init__(*groups)
-        self.text = Text(FONT, int(20 * get_height_inc()), str(score), WHITE,
-                         mystery.rect.x + int(20 * get_width_inc()), mystery.rect.y + int(6 * get_height_inc()))
+        self.text = Text(FONT, 20, str(score), WHITE,
+                         mystery.rect.x + 20, mystery.rect.y + 6)
         self.timer = time.get_ticks()
 
     def update(self, current_time, *args):
@@ -313,8 +309,8 @@ class Life(sprite.Sprite):
     def __init__(self, xpos, ypos):
         sprite.Sprite.__init__(self)
         self.image = IMAGES['ship']
-        self.image = transform.scale(self.image, (int(23 * get_width_inc()), int(23 * get_height_inc())))
-        self.rect = self.image.get_rect(topleft=(int(xpos * get_width_inc()), int(ypos * get_height_inc())))
+        self.image = transform.scale(self.image, (23, 23))
+        self.rect = self.image.get_rect(topleft=(xpos, ypos))
 
     def update(self, *args):
         game.screen.blit(self.image, self.rect)
@@ -322,85 +318,32 @@ class Life(sprite.Sprite):
 
 class Text(object):
     def __init__(self, textFont, size, message, color, xpos, ypos):
-        self.font = font.Font(textFont, int(size * get_height_inc()))
+        self.font = font.Font(textFont, size)
         self.surface = self.font.render(message, True, color)
-        self.rect = self.surface.get_rect(topleft=(int(xpos * get_width_inc()), int(ypos * get_height_inc())))
+        self.rect = self.surface.get_rect(topleft=(xpos, ypos))
 
     def draw(self, surface):
         surface.blit(self.surface, self.rect)
 
 
-#---------- MAC ENG ADDITIONS START -----------#
-class TextVariableMsg(object):
-    def __init__(self, textFont, size, color, xpos, ypos):
-        self.font = textFont
-        self.size = size
-        self.color = color 
-        self.xpos = xpos
-        self.ypos = ypos 
-
-    def create(self, message):
-        return Text(self.font, self.size, message, self.color, self.xpos, self.ypos)
-
-class TextVariableColor(object):
-    def __init__(self, textFont, size, message, xpos, ypos):
-        self.font = textFont
-        self.size = size
-        self.message = message 
-        self.xpos = xpos
-        self.ypos = ypos 
-
-    def create(self, color):
-        return Text(self.font, self.size, self.message, color, self.xpos, self.ypos)   
-
-#---------- MAC ENG ADDITIONS END -------------#
-
-def set_display_vals(height, width):
-    environ['DISPLAY_HEIGHT'], environ['DISPLAY_WIDTH'] = str(height), str(width)
-
-def get_height_inc():
-    return int(environ['DISPLAY_HEIGHT']) / ORIGINAL_HEIGHT
-
-def get_width_inc():
-    return int(environ['DISPLAY_WIDTH']) / ORIGINAL_WIDTH
-
 class SpaceInvaders(object):
     def __init__(self):
-        global BLOCKERS_POSITION, ENEMY_DEFAULT_POSITION, ENEMY_MOVE_DOWN, joystick_interface
         # It seems, in Linux buffersize=512 is not enough, use 4096 to prevent:
         #   ALSA lib pcm.c:7963:(snd_pcm_recover) underrun occurred
         mixer.pre_init(44100, -16, 1, 4096)
         init()
-
-        #---------- MAC ENG ADDITIONS START -----------#
-        # get the new fullscreen width and height and calculate ratio based on the original game's dimensions
-        display_info = display.Info() 
-        screen_width, screen_height = display_info.current_w, display_info.current_h
-
-        logging.debug("Screen width = {}, Screen height = {}".format(screen_width, screen_height))
-        set_display_vals(screen_height, screen_width)
-        logging.debug("Width increase ratio = {}, Height increase ratio = {}".format(get_width_inc(), get_height_inc()))
-
-        BLOCKERS_POSITION = int(BLOCKERS_POSITION * get_height_inc())
-        ENEMY_DEFAULT_POSITION = int(ENEMY_DEFAULT_POSITION * get_height_inc())
-        ENEMY_MOVE_DOWN = int(ENEMY_MOVE_DOWN * get_height_inc())
-
-        #---------- MAC ENG ADDITIONS END -------------#
-
         self.clock = time.Clock()
-        self.caption = display.set_caption('The Last Defender')
+        self.caption = display.set_caption('Space Invaders')
         self.screen = SCREEN
         self.background = image.load(IMAGE_PATH + 'background.jpg').convert()
-        self.background = transform.scale(self.background, (screen_width, screen_height))
         self.startGame = False
         self.mainScreen = True
         self.gameOver = False
         # Counter for enemy starting position (increased each new round)
         self.enemyPosition = ENEMY_DEFAULT_POSITION
-        self.titleText = Text(FONT, 50, 'The Last Defender', YELLOW, ORIGINAL_WIDTH*0.15, ORIGINAL_HEIGHT*0.15)
-        self.titleText3 = Text(FONT, 25, 'A Fireball Story', YELLOW, ORIGINAL_WIDTH*0.55, ORIGINAL_HEIGHT*0.25)
+        self.titleText = Text(FONT, 50, 'Space Invaders', WHITE, 164, 155)
         self.titleText2 = Text(FONT, 25, 'Press any key to continue', WHITE,
-                               ORIGINAL_WIDTH*0.25, ORIGINAL_HEIGHT*0.35)
+                               201, 225)
         self.gameOverText = Text(FONT, 50, 'Game Over', WHITE, 250, 270)
         self.nextRoundText = Text(FONT, 50, 'Next Round', WHITE, 240, 270)
         self.enemy1Text = Text(FONT, 25, '   =   10 pts', GREEN, 368, 270)
@@ -414,30 +357,6 @@ class SpaceInvaders(object):
         self.life2 = Life(742, 3)
         self.life3 = Life(769, 3)
         self.livesGroup = sprite.Group(self.life1, self.life2, self.life3)
-
-        #---------- MAC ENG ADDITIONS START -----------#
-        # gameover
-        self.gameover_signal = False 
-        self.gameOverText_scoreV = TextVariableMsg(FONT, 30, BLUE, 320, 330)
-
-        # leaderboard
-        self.leaderboardScreen = False
-        self.leaderboard = Leaderboard(self.screen, self.background)
-        self.leaderboardInitialized = False 
-
-        # enter username
-        self.formActive = False 
-        self.formScreens = FormScreensController(self.screen, self.background)
-
-        # joystick interface
-        joystick_interface = JoystickInterface(mapping={
-            K_SPACE: 'round(self.joystick.get_button(2)) == 1',
-            K_RIGHT: 'round(self.joystick.get_axis(1)) == 1',
-            K_LEFT: 'round(self.joystick.get_axis(1)) == -1',
-        })
-        joystick_interface.init()
-
-        #---------- MAC ENG ADDITIONS END -------------#
 
     def reset(self, score):
         self.player = Ship()
@@ -464,8 +383,8 @@ class SpaceInvaders(object):
         blockerGroup = sprite.Group()
         for row in range(4):
             for column in range(9):
-                blocker = Blocker(10, FIREBALL, row, column)
-                blocker.rect.x = int(50 * get_width_inc()) + (int(200 * get_width_inc()) * number) + (column * blocker.width)
+                blocker = Blocker(10, GREEN, row, column)
+                blocker.rect.x = 50 + (200 * number) + (column * blocker.width)
                 blocker.rect.y = BLOCKERS_POSITION + (row * blocker.height)
                 blockerGroup.add(blocker)
         return blockerGroup
@@ -499,29 +418,28 @@ class SpaceInvaders(object):
     @staticmethod
     def should_exit(evt):
         # type: (pygame.event.EventType) -> bool
-        return (evt.type == KEYUP and evt.key == K_KP_DIVIDE)
+        return evt.type == QUIT or (evt.type == KEYUP and evt.key == K_ESCAPE)
 
     def check_input(self):
-        global joystick_interface
         self.keys = key.get_pressed()
         for e in event.get():
             if self.should_exit(e):
                 sys.exit()
-            if e.type == JOYBUTTONDOWN:
-                if joystick_interface.is_key_pressed(K_SPACE):
+            if e.type == KEYDOWN:
+                if e.key == K_SPACE:
                     if len(self.bullets) == 0 and self.shipAlive:
                         if self.score < 1000:
-                            bullet = Bullet(self.player.rect.x + 15,
+                            bullet = Bullet(self.player.rect.x + 23,
                                             self.player.rect.y + 5, -1,
                                             15, 'laser', 'center')
                             self.bullets.add(bullet)
                             self.allSprites.add(self.bullets)
                             self.sounds['shoot'].play()
                         else:
-                            leftbullet = Bullet(self.player.rect.x + 5,
+                            leftbullet = Bullet(self.player.rect.x + 8,
                                                 self.player.rect.y + 5, -1,
                                                 15, 'laser', 'left')
-                            rightbullet = Bullet(self.player.rect.x + 25,
+                            rightbullet = Bullet(self.player.rect.x + 38,
                                                  self.player.rect.y + 5, -1,
                                                  15, 'laser', 'right')
                             self.bullets.add(leftbullet)
@@ -534,8 +452,8 @@ class SpaceInvaders(object):
         for row in range(5):
             for column in range(10):
                 enemy = Enemy(row, column)
-                enemy.rect.x = int(157 * get_width_inc()) + (column * int(50 * get_width_inc()))
-                enemy.rect.y = self.enemyPosition + (row * int(45 * get_height_inc()))
+                enemy.rect.x = 157 + (column * 50)
+                enemy.rect.y = self.enemyPosition + (row * 45)
                 enemies.add(enemy)
 
         self.enemies = enemies
@@ -544,7 +462,7 @@ class SpaceInvaders(object):
         if (time.get_ticks() - self.timer) > 700 and self.enemies:
             enemy = self.enemies.random_bottom()
             self.enemyBullets.add(
-                Bullet(enemy.rect.x + int(18 * get_width_inc()), enemy.rect.y + int(25 * get_height_inc()), 1, 5,
+                Bullet(enemy.rect.x + 14, enemy.rect.y + 20, 1, 5,
                        'enemylaser', 'center'))
             self.allSprites.add(self.enemyBullets)
             self.timer = time.get_ticks()
@@ -565,25 +483,22 @@ class SpaceInvaders(object):
     def create_main_menu(self):
         self.enemy1 = IMAGES['enemy3_1']
         self.enemy1 = transform.scale(self.enemy1, (40, 40))
-        self.enemy1 = _scale_img(self.enemy1)
         self.enemy2 = IMAGES['enemy2_2']
         self.enemy2 = transform.scale(self.enemy2, (40, 40))
-        self.enemy2 = _scale_img(self.enemy2)
         self.enemy3 = IMAGES['enemy1_2']
         self.enemy3 = transform.scale(self.enemy3, (40, 40))
-        self.enemy3 = _scale_img(self.enemy3)
         self.enemy4 = IMAGES['mystery']
         self.enemy4 = transform.scale(self.enemy4, (80, 40))
-        self.enemy4 = _scale_img(self.enemy4)
-        self.screen.blit(self.enemy1, (int(318 * get_width_inc()), int(270 * get_height_inc())))
-        self.screen.blit(self.enemy2, (int(318 * get_width_inc()), int(320 * get_height_inc())))
-        self.screen.blit(self.enemy3, (int(318 * get_width_inc()), int(370 * get_height_inc())))
-        self.screen.blit(self.enemy4, (int(299 * get_width_inc()), int(420 * get_height_inc())))
+        self.screen.blit(self.enemy1, (318, 270))
+        self.screen.blit(self.enemy2, (318, 320))
+        self.screen.blit(self.enemy3, (318, 370))
+        self.screen.blit(self.enemy4, (299, 420))
 
     def check_collisions(self):
         sprite.groupcollide(self.bullets, self.enemyBullets, True, True)
 
-        for enemy in sprite.groupcollide(self.enemies, self.bullets, True, True).keys():
+        for enemy in sprite.groupcollide(self.enemies, self.bullets,
+                                         True, True).keys():
             self.sounds['invaderkilled'].play()
             self.calculate_score(enemy.row)
             EnemyExplosion(enemy, self.explosionsGroup)
@@ -601,14 +516,13 @@ class SpaceInvaders(object):
 
         for player in sprite.groupcollide(self.playerGroup, self.enemyBullets,
                                           True, True).keys():
-            logging.debug("Collision with player.")
             if self.life3.alive():
                 self.life3.kill()
-            ######  COMMENT THIS FOR 1 LIFE DURING DEBUGGING #######
-            # elif self.life2.alive():
-            #     self.life2.kill()
-            # elif self.life1.alive():
-            #     self.life1.kill()
+            elif self.life2.alive():
+                self.life2.kill()
+            elif self.life1.alive():
+                self.life1.kill()
+            else:
                 self.gameOver = True
                 self.startGame = False
             self.sounds['shipexplosion'].play()
@@ -617,13 +531,11 @@ class SpaceInvaders(object):
             self.shipTimer = time.get_ticks()
             self.shipAlive = False
 
-        if self.enemies.bottom >= int(540 * get_height_inc()):
+        if self.enemies.bottom >= 540:
             sprite.groupcollide(self.enemies, self.playerGroup, True, True)
-            player_alive = self.player.alive()
-            if not player_alive or self.enemies.bottom >= int(600 * get_height_inc()):
+            if not self.player.alive() or self.enemies.bottom >= 600:
                 self.gameOver = True
                 self.startGame = False
-            logging.debug("self.gameover = {}".format(self.gameOver))
 
         sprite.groupcollide(self.bullets, self.allBlockers, True, True)
         sprite.groupcollide(self.enemyBullets, self.allBlockers, True, True)
@@ -638,42 +550,29 @@ class SpaceInvaders(object):
             self.makeNewShip = False
             self.shipAlive = True
 
-    def create_game_over(self, currentTime, score):
+    def create_game_over(self, currentTime):
         self.screen.blit(self.background, (0, 0))
-        self.gameOverText_score = self.gameOverText_scoreV.create("Score: {}".format(score))
-
         passed = currentTime - self.timer
         if passed < 750:
-            # SHOW SCORE
             self.gameOverText.draw(self.screen)
-            self.gameOverText_score.draw(self.screen)
         elif 750 < passed < 1500:
-            # HIDE SCORE
             self.screen.blit(self.background, (0, 0))
         elif 1500 < passed < 2250:
-            # SHOW SCORE
             self.gameOverText.draw(self.screen)
-            self.gameOverText_score.draw(self.screen)
-        elif 2250 < passed < 3000:
-            # HIDE SCORE
+        elif 2250 < passed < 2750:
             self.screen.blit(self.background, (0, 0))
-        elif passed >= 3000:
-            #---------- MAC ENG ADDITIONS START -----------#
-            self.formActive = True
-            self.gameOver = False 
-            #---------- MAC ENG ADDITIONS END -----------#
+        elif passed > 3000:
+            self.mainScreen = True
 
         for e in event.get():
             if self.should_exit(e):
                 sys.exit()
 
     def main(self):
-        global joystick_interface
         while True:
             if self.mainScreen:
                 self.screen.blit(self.background, (0, 0))
                 self.titleText.draw(self.screen)
-                self.titleText3.draw(self.screen)
                 self.titleText2.draw(self.screen)
                 self.enemy1Text.draw(self.screen)
                 self.enemy2Text.draw(self.screen)
@@ -683,7 +582,7 @@ class SpaceInvaders(object):
                 for e in event.get():
                     if self.should_exit(e):
                         sys.exit()
-                    if e.type == KEYDOWN or e.type == JOYBUTTONDOWN:
+                    if e.type == KEYUP:
                         # Only create blockers on a new game, not a new round
                         self.allBlockers = sprite.Group(self.make_blockers(0),
                                                         self.make_blockers(1),
@@ -691,23 +590,8 @@ class SpaceInvaders(object):
                                                         self.make_blockers(3))
                         self.livesGroup.add(self.life1, self.life2, self.life3)
                         self.reset(0)
-
-                        ## UNCOMMENT FOR ACTUAL GAME ##
-
-                        self.startGame = True 
-                        self.leaderboardScreen = False
-
-                        ## UNCOMMENT TO SKIP GAMEPLAY ##
-
-                        # self.startGame = False 
-                        # self.leaderboardScreen = True
-
-                        ## END ##
-
+                        self.startGame = True
                         self.mainScreen = False
-
-                # reset signals for maceng_receiver
-                self.gameover_signal = False 
 
             elif self.startGame:
                 if not self.enemies and not self.explosionsGroup:
@@ -749,45 +633,8 @@ class SpaceInvaders(object):
                 currentTime = time.get_ticks()
                 # Reset enemy starting position
                 self.enemyPosition = ENEMY_DEFAULT_POSITION
-                self.create_game_over(currentTime, score=self.score)
+                self.create_game_over(currentTime)
 
-            #---------- MAC ENG ADDITIONS START -----------#
-            elif self.formActive:
-                self.formScreens.create()
-                for e in event.get():
-                    if self.should_exit(e):
-                        sys.exit()
-                    if e.type == KEYDOWN:
-                        form_data, goto_leaderboard = self.formScreens.update(e.key)
-                        logging.debug("Form Data: \n{}".format(form_data))
-                        if goto_leaderboard:
-                            form_data["score"] = self.score
-                            maceng_receiver.gameover(form_data=form_data)
-                            self.formActive = False
-                            self.leaderboardScreen = True 
-                            self.formScreens.reset()
-
-            elif self.leaderboardScreen:
-                if not self.leaderboardInitialized:
-                    self.leaderboard.initialize()
-                    self.leaderboardInitialized = True 
-                self.leaderboard.create()
-                for e in event.get():
-                    if self.should_exit(e):
-                        sys.exit()
-                    if e.type == KEYDOWN or e.type == JOYBUTTONUP:
-                        if e.type == JOYBUTTONUP:
-                            equiv_key = joystick_interface.get_equiv_key()
-                            logging.debug("Equiv key = {}".format(equiv_key))
-                        else:
-                            equiv_key = e.key 
-                        change_to_mainscreen = self.leaderboard.update(equiv_key)
-                        if change_to_mainscreen:
-                            self.mainScreen = True 
-                            self.leaderboardScreen = False 
-                            self.leaderboardInitialized = False 
-
-            #---------- MAC ENG ADDITIONS END -----------#
             display.update()
             self.clock.tick(60)
 
