@@ -1,7 +1,7 @@
 import logging
 from pygame import K_RIGHT, K_LEFT, K_RETURN
 from .constants import * 
-from .backend.models import User, Score
+from .models import User, Score
 
 # constants
 BTN_LABEL_SIZE = 25
@@ -123,40 +123,20 @@ class Leaderboard(object):
 		for b in BUTTONS:
 			b.initialize()
 
-		alltime_scores = Score.get_alltime_scores()
+		alltime_scores = Score.get_top_scores()
 		logging.debug("All-time scores: \n{}".format(alltime_scores))
 
-		alltime_table = [["Rank", "Username", "Team", "Score"]]
+		alltime_table = [["Rank", "Username", "Score"]]
 		rank = 1
 		for score in alltime_scores:
-			team = str(score.user.team) if score.user.team else "-"
 			alltime_table.append([
 				str(f'{rank:02}'), 
 				score.user.username, 
-				team, 
 				str(score.score)
 			])
 			rank += 1
 
 		ALLTIME_PG.create_table(self.screen, alltime_table)
-
-		today_scores = Score.get_today_scores()
-		logging.debug("Today scores: \n{}".format(today_scores))
-
-		today_table = [["Rank", "Username", "Team", "Score"]]
-
-		rank = 1
-		for score in today_scores:
-			team = str(score.user.team) if score.user.team else "-"
-			today_table.append([
-				str(f'{rank:02}'), 
-				score.user.username, 
-				team, 
-				str(score.score)
-			])
-			rank += 1
-
-		TODAY_PG.create_table(self.screen, today_table)
 
 
 	def create(self):
@@ -216,18 +196,15 @@ class Leaderboard(object):
 BUTTONS = [
 	Button("Main menu", 100, 560),
 	Button("All-time",300, 560, active=True),
-	Button("Today", 500, 560),
 	Button("Credits", 600, 560),
 ]
 MAIN_MENU = BUTTONS[0]
 
 # pages 
 ALLTIME_PG = Page("Leaderboard", subtitle="All-time", active=True)
-TODAY_PG = Page("Leaderboard", subtitle="Today")
 
 PAGES = [
 	ALLTIME_PG,
 	ALLTIME_PG, 
-	TODAY_PG,
 	Page("Credits"),
 ]

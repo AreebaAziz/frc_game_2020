@@ -221,32 +221,22 @@ class Mystery(sprite.Sprite):
         self.moveTime = 25000
         self.direction = 1
         self.timer = time.get_ticks()
-        self.mysteryEntered = mixer.Sound(SOUND_PATH + 'mysteryentered.wav')
-        self.mysteryEntered.set_volume(0.3)
-        self.playSound = True
 
     def update(self, keys, currentTime, *args):
         resetTimer = False
         passed = currentTime - self.timer
         if passed > self.moveTime:
-            if (self.rect.x < 0 or self.rect.x > 800) and self.playSound:
-                self.mysteryEntered.play()
-                self.playSound = False
             if self.rect.x < 840 and self.direction == 1:
-                self.mysteryEntered.fadeout(4000)
                 self.rect.x += 2
                 game.screen.blit(self.image, self.rect)
             if self.rect.x > -100 and self.direction == -1:
-                self.mysteryEntered.fadeout(4000)
                 self.rect.x -= 2
                 game.screen.blit(self.image, self.rect)
 
         if self.rect.x > 830:
-            self.playSound = True
             self.direction = -1
             resetTimer = True
         if self.rect.x < -90:
-            self.playSound = True
             self.direction = 1
             resetTimer = True
         if passed > self.moveTime and resetTimer:
@@ -367,7 +357,6 @@ class SpaceInvaders(object):
         global BLOCKERS_POSITION, ENEMY_DEFAULT_POSITION, ENEMY_MOVE_DOWN
         # It seems, in Linux buffersize=512 is not enough, use 4096 to prevent:
         #   ALSA lib pcm.c:7963:(snd_pcm_recover) underrun occurred
-        mixer.pre_init(44100, -16, 1, 4096)
         init()
 
         #---------- MAC ENG ADDITIONS START -----------#
@@ -445,7 +434,6 @@ class SpaceInvaders(object):
         self.noteTimer = time.get_ticks()
         self.shipTimer = time.get_ticks()
         self.score = score
-        self.create_audio()
         self.makeNewShip = False
         self.shipAlive = True
 
@@ -458,32 +446,6 @@ class SpaceInvaders(object):
                 blocker.rect.y = BLOCKERS_POSITION + (row * blocker.height)
                 blockerGroup.add(blocker)
         return blockerGroup
-
-    def create_audio(self):
-        self.sounds = {}
-        for sound_name in ['shoot', 'shoot2', 'invaderkilled', 'mysterykilled',
-                           'shipexplosion']:
-            self.sounds[sound_name] = mixer.Sound(
-                SOUND_PATH + '{}.wav'.format(sound_name))
-            self.sounds[sound_name].set_volume(0.2)
-
-        self.musicNotes = [mixer.Sound(SOUND_PATH + '{}.wav'.format(i)) for i
-                           in range(4)]
-        for sound in self.musicNotes:
-            sound.set_volume(0.5)
-
-        self.noteIndex = 0
-
-    def play_main_music(self, currentTime):
-        if currentTime - self.noteTimer > self.enemies.moveTime:
-            self.note = self.musicNotes[self.noteIndex]
-            if self.noteIndex < 3:
-                self.noteIndex += 1
-            else:
-                self.noteIndex = 0
-
-            self.note.play()
-            self.noteTimer += self.enemies.moveTime
 
     @staticmethod
     def should_exit(evt):
@@ -504,7 +466,6 @@ class SpaceInvaders(object):
                                             15, 'laser', 'center')
                             self.bullets.add(bullet)
                             self.allSprites.add(self.bullets)
-                            self.sounds['shoot'].play()
                         else:
                             leftbullet = Bullet(self.player.rect.x + 8,
                                                 self.player.rect.y + 5, -1,
@@ -515,7 +476,6 @@ class SpaceInvaders(object):
                             self.bullets.add(leftbullet)
                             self.bullets.add(rightbullet)
                             self.allSprites.add(self.bullets)
-                            self.sounds['shoot2'].play()
 
     def make_enemies(self):
         enemies = EnemiesGroup(10, 5)
@@ -573,15 +533,12 @@ class SpaceInvaders(object):
 
         for enemy in sprite.groupcollide(self.enemies, self.bullets,
                                          True, True).keys():
-            self.sounds['invaderkilled'].play()
             self.calculate_score(enemy.row)
             EnemyExplosion(enemy, self.explosionsGroup)
             self.gameTimer = time.get_ticks()
 
         for mystery in sprite.groupcollide(self.mysteryGroup, self.bullets,
                                            True, True).keys():
-            mystery.mysteryEntered.stop()
-            self.sounds['mysterykilled'].play()
             score = self.calculate_score(mystery.row)
             MysteryExplosion(mystery, score, self.explosionsGroup)
             newShip = Mystery()
@@ -593,14 +550,12 @@ class SpaceInvaders(object):
             logging.debug("Collision with player.")
             if self.life3.alive():
                 self.life3.kill()
-            ######  COMMENT THIS FOR 1 LIFE DURING DEBUGGING #######
-            # elif self.life2.alive():
-            #     self.life2.kill()
-            # elif self.life1.alive():
-            #     self.life1.kill()
+            elif self.life2.alive():
+                self.life2.kill()
+            elif self.life1.alive():
+                self.life1.kill()
                 self.gameOver = True
                 self.startGame = False
-            self.sounds['shipexplosion'].play()
             ShipExplosion(player, self.explosionsGroup)
             self.makeNewShip = True
             self.shipTimer = time.get_ticks()
@@ -716,7 +671,6 @@ class SpaceInvaders(object):
                         self.gameTimer += 3000
                 else:
                     currentTime = time.get_ticks()
-                    self.play_main_music(currentTime)
                     self.screen.blit(self.background, (0, 0))
                     self.allBlockers.update(self.screen)
                     self.scoreText2 = Text(FONT, 20, str(self.score), GREEN,
